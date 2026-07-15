@@ -173,10 +173,15 @@ function buscarPorGPS() {
     }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
+// ADICIONE ESTE NO LUGAR:
 if ('serviceWorker' in navigator) {
-    var blob = new Blob(['self.addEventListener("fetch", function(e){})'], {type: 'text/javascript'});
-    var urlSW = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(urlSW).catch(function(err) { console.log(err); });
+    navigator.serviceWorker.register('sw.js')
+        .then(function(reg) {
+            console.log('Service Worker registrado com sucesso para o escopo:', reg.scope);
+        })
+        .catch(function(err) {
+            console.warn('Erro ao registrar o Service Worker:', err);
+        });
 }
 
 window.onload = function() { 
