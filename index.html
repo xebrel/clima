@@ -1,1 +1,258 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DroneWeather Pro</title><link rel="stylesheet" href="https://unpkg.com"/><style>body{font-family:'Segoe UI',Arial,sans-serif;background-color:#121214;color:#fff;margin:0;padding:15px;display:flex;justify-content:center}.container{width:100%;max-width:400px;background-color:#1a1a1e;border-radius:15px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,.5);box-sizing:border-box}h2{text-align:center;margin-top:0;color:#00adb5}.local-info{text-align:center;font-size:.9rem;color:#aaa;margin-bottom:15px}.status-box{background-color:#555;color:#fff;text-align:center;padding:15px;border-radius:10px;font-weight:700;font-size:1.1rem;margin-bottom:20px;box-shadow:0 4px 6px rgba(0,0,0,.2)}.busca-container{display:flex;gap:10px;margin-bottom:20px}input{flex:1;padding:10px;border-radius:8px;border:1px solid #333;background-color:#26262b;color:#fff;font-size:1rem;width:100%;box-sizing:border-box}button{background-color:#00adb5;color:#fff;border:none;padding:10px 15px;font-size:.9rem;font-weight:700;border-radius:8px;cursor:pointer}.btn-gps{background-color:#28a745;width:100%;margin-bottom:20px;padding:12px;color:#fff;border:none;font-weight:700;border-radius:8px;cursor:pointer}.grid-clima{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px}.card{background-color:#26262b;padding:15px;border-radius:10px;text-align:center;border-left:4px solid #00adb5}.card-titulo{font-size:.85rem;color:#aaa;text-transform:uppercase;margin-bottom:5px}.card-valor{font-size:1.3rem;font-weight:700}#mapa{height:200px;width:100%;border-radius:10px;border:2px solid #26262b;margin-top:10px}</style></head><body><div class="container"><h2>DroneWeather Pro</h2><div class="local-info" id="nomeLocal">Local: Aguardando consulta...</div><div class="status-box" id="statusVoo">⚪ AGUARDANDO DADOS</div><div class="busca-container"><input type="text" id="campoCidade" placeholder="Digite a cidade"><button onclick="buscarPorCidade()">Buscar</button></div><button class="btn-gps" onclick="tentarObterLocalizacao()">📍 Pegar Minha Localização</button><div class="grid-clima"><div class="card"><div class="card-titulo">Vento Atual</div><div class="card-valor" id="txtVento">-- km/h</div></div><div class="card"><div class="card-titulo">Chuva</div><div class="card-valor" id="txtChuva">-- mm</div></div><div class="card"><div class="card-titulo">Satélites GPS</div><div class="card-valor">Simulado</div></div><div class="card"><div class="card-titulo">Índice KP</div><div class="card-valor">Simulado</div></div></div><div id="mapa"></div></div><script src="https://unpkg.com"></script><script>const LIMITE_VENTO=20;let mapaInstancia=null,marcadorAtual=null;function inicializarMapa(t,e){null===mapaInstancia?(mapaInstancia=L.map("mapa").setView([t,e],12),L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(mapaInstancia)):mapaInstancia.setView([t,e],12),marcadorAtual?marcadorAtual.setLatLng([t,e]):marcadorAtual=L.marker([t,e]).addTo(mapaInstancia).bindPopup("📍 Ponto de Decolagem").openPopup()}setTimeout(()=>{inicializarMapa(-23.5505,-46.6333)},500);async function consultarClimaReal(t,e,a){const n=document.getElementById("statusVoo");try{const o=await fetch(https://open-meteo.com{t}&longitude=${e}&current=wind_speed_10m,precipitation),r=await o.json(),i=r.current.wind_speed_10m,s=r.current.precipitation;document.getElementById("nomeLocal").innerText="Local: "+a,document.getElementById("txtVento").innerText=i+" km/h",document.getElementById("txtChuva").innerText=s+" mm",inicializarMapa(t,e),s>0?(n.innerText="🔴 VOO PROIBIDO: CHUVA",n.style.backgroundColor="#d9534f"):i>LIMITE_VENTO?(n.innerText="🔴 VOO PROIBIDO: VENTO FORTE ("+i+" km/h)",n.style.backgroundColor="#d9534f"):(n.innerText="🟢 CONDIÇÕES SEGURAS PARA VOO",n.style.backgroundColor="#04b445")}catch(c){alert("Erro ao buscar dados climáticos."),n.innerText="🔴 ERRO DE CONEXÃO"}}async function buscarPorCidade(){const t=document.getElementById("campoCidade").value;if(!t)return alert("Digite o nome de uma cidade!");const e=document.getElementById("statusVoo");e.innerText="⏳ BUSCANDO...",e.style.backgroundColor="#555";const a=t.normalize("NFD").replace(/[\u0300-\u036f]/g,"");try{const n=await fetch(https://open-meteo.com{encodeURIComponent(a)}&count=1&language=pt),o=await n.json();if(o.results&&o.results.length > 0){const r=o.results[0];consultarClimaReal(r.latitude,r.longitude,r.name+", "+(r.admin1||r.country))}else alert("Cidade não encontrada."),e.innerText="🔴 NÃO ENCONTRADO"}catch(i){alert("Falha de comunicação."),e.innerText="🔴 FALHA NA BUSCA"}}function tentarObterLocalizacao(){document.getElementById("statusVoo").innerText="⏳ LOCALIZANDO...";navigator.geolocation?navigator.geolocation.getCurrentPosition(t=>{consultarClimaReal(t.coords.latitude,t.coords.longitude,"Sua Posição")},()=>{buscarPorIP()}):buscarPorIP()}async function buscarPorIP(){try{const t=await fetch("https://ipapi.co"),e=await t.json();e.city?consultarClimaReal(e.latitude,e.longitude,e.city+", "+e.region):document.getElementById("statusVoo").innerText="🔴 LOCAL FALHOU"}catch(a){document.getElementById("statusVoo").innerText="🔴 ERRO DE REDE"}}</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneWeather Pro</title>
+    
+    <!-- Correção da folha de estilos do mapa Leaflet via CDN -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #121214;
+            color: #fff;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #1a1a1e;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,.5);
+            box-sizing: border-box;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #00adb5;
+        }
+        .local-info {
+            text-align: center;
+            font-size: .9rem;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        .status-box {
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,.2);
+            transition: background 0.3s;
+        }
+        .busca-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: #26262b;
+            color: #fff;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #00adb5;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            font-size: .9rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-gps {
+            background-color: #28a745;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 12px;
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .grid-clima {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #26262b;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #00adb5;
+        }
+        .card-titulo {
+            font-size: .85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .card-valor {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        #mapa {
+            height: 200px;
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #26262b;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>DroneWeather Pro</h2>
+    <div class="local-info" id="nomeLocal">Local: Aguardando consulta...</div>
+    <div class="status-box" id="statusVoo">⚪ AGUARDANDO DADOS</div>
+    
+    <div class="busca-container">
+        <input type="text" id="campoCidade" placeholder="Digite a cidade...">
+        <button onclick="buscarPorCidade()">Buscar</button>
+    </div>
+    <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
+
+    <div class="grid-clima">
+        <div class="card">
+            <div class="card-titulo">Vento</div>
+            <div class="card-valor" id="valorVento">-- km/h</div>
+        </div>
+        <div class="card">
+            <div class="card-titulo">Rajada</div>
+            <div class="card-valor" id="valorRajada">-- km/h</div>
+        </div>
+        <div class="card">
+            <div class="card-titulo">Chuva (1h)</div>
+            <div class="card-valor" id="valorChuva">-- mm</div>
+        </div>
+        <div class="card">
+            <div class="card-titulo">Temperatura</div>
+            <div class="card-valor" id="valorTemp">-- °C</div>
+        </div>
+    </div>
+
+    <div id="mapa"></div>
+</div>
+
+<!-- Importação do Script do Mapa Leaflet -->
+<script src="https://unpkg.com"></script>
+
+<script>
+    // Configurações básicas da API de Clima (Chave pública demonstrativa da OpenWeather)
+    const API_KEY = "b1b15e88fa797225412429c1c50c122a1"; 
+    let mapa = null;
+    let marcador = null;
+
+    // Inicializa o mapa com coordenadas padrão (Brasília)
+    function inicializarMapa(lat = -15.7801, lon = -47.9292) {
+        if (!mapa) {
+            mapa = L.map('mapa').setView([lat, lon], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(mapa);
+            marcador = L.marker([lat, lon]).addTo(mapa);
+        } else {
+            mapa.setView([lat, lon], 12);
+            marcador.setLatLng([lat, lon]);
+        }
+    }
+
+    // Processa os dados recebidos e decide as condições de voo do Drone
+    function atualizarPainel(dados) {
+        const cidade = dados.name;
+        const pais = dados.sys.country;
+        const ventoVelocidade = Math.round(dados.wind.speed * 3.6); // Converte m/s para km/h
+        const ventoRajada = dados.wind.gust ? Math.round(dados.wind.gust * 3.6) : 0;
+        const chuva Volume = dados.rain && dados.rain['1h'] ? dados.rain['1h'] : 0;
+        const temp = Math.round(dados.main.temp);
+
+        // Atualiza elementos visuais da interface
+        document.getElementById('nomeLocal').innerText = `Local: ${cidade}, ${pais}`;
+        document.getElementById('valorVento').innerText = `${ventoVelocidade} km/h`;
+        document.getElementById('valorRajada').innerText = `${ventoRajada} km/h`;
+        document.getElementById('valorChuva').innerText = `${chuvaVolume} mm`;
+        document.getElementById('valorTemp').innerText = `${temp} °C`;
+
+        // Lógica de Status de Voo do Drone
+        const statusBox = document.getElementById('statusVoo');
+        
+        // Critérios restritivos: Vento > 25km/h, Rajadas > 35km/h ou qualquer sinal de chuva
+        if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaVolume > 0) {
+            statusBox.innerText = "🔴 VOO PROIBIDO / PERIGOSO";
+            statusBox.style.backgroundColor = "#dc3545";
+        } else if (ventoVelocidade > 15 || ventoRajada > 22) {
+            statusBox.innerText = "🟡 VOO COM CAUTELA / ATENÇÃO";
+            statusBox.style.backgroundColor = "#ffc107";
+            statusBox.style.color = "#000";
+        } else {
+            statusBox.innerText = "🟢 VOO LIBERADO";
+            statusBox.style.backgroundColor = "#28a745";
+            statusBox.style.color = "#fff";
+        }
+
+        // Atualiza posição do mapa
+        inicializarMapa(dados.coord.lat, dados.coord.lon);
+    }
+
+    // Busca clima pelo nome digitado no campo de texto
+    async function buscarPorCidade() {
+        const cidade = document.getElementById('campoCidade').value.trim();
+        if (!cidade) return alert("Por favor, digite o nome de uma cidade.");
+
+        try {
+            const url = `https://openweathermap.org{encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
+            const resposta = await fetch(url);
+            if (!resposta.ok) throw new Error("Cidade não encontrada.");
+            const dados = await reply.json();
+            atualizarPainel(dados);
+        } catch (erro) {
+            alert(erro.message);
+        }
+    }
+
+    // Busca clima usando o sensor de GPS do navegador
+    function buscarPorGPS() {
+        if (!navigator.geolocation) return alert("Seu navegador não suporta Geolocalização.");
+
+        navigator.geolocation.getCurrentPosition(async (posicao) => {
+            const lat = posicao.coords.latitude;
+            const lon = posicao.coords.longitude;
+            try {
+                const url = `https://openweathermap.org{lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
+                const resposta = await fetch(url);
+                const dados = await reply.json();
+                atualizarPainel(dados);
+            } catch (erro) {
+                alert("Erro ao buscar dados com o GPS.");
+            }
+        }, () => {
+            alert("Acesso à localização negado pelo usuário.");
+        });
+    }
+
+    // Inicializa o mapa vazio ao carregar a página
+    window.onload = () => inicializarMapa();
+</script>
+
+</body>
+</html>
