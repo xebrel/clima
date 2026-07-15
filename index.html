@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DroneWeather Pro</title>
     
-    <!-- CSS do Mapa Leaflet -->
+    <!-- CSS do Mapa Leaflet via HTTPS (Obrigatório para GitHub Pages) -->
     <link rel="stylesheet" href="https://unpkg.com" />
     
     <style>
@@ -154,17 +154,17 @@
     <div id="mapa"></div>
 </div>
 
-<!-- Biblioteca JavaScript do Mapa Leaflet -->
+<!-- JavaScript do Mapa Leaflet via HTTPS -->
 <script src="https://unpkg.com"></script>
 
 <script>
-    // Chave de API pública para testes do OpenWeather
+    // Chave pública demonstrativa do OpenWeather
     const API_KEY = "b1b15e88fa797225412429c1c50c122a1"; 
     let mapa = null;
     let marcador = null;
 
-    // Inicializa ou atualiza o mapa na tela
-    function inicializarMapa(lat = -27.5954, lon = -48.5480) { // Padrão inicial em Florianópolis
+    // Inicializa o mapa centralizado em Florianópolis
+    function inicializarMapa(lat = -27.5954, lon = -48.5480) {
         if (!mapa) {
             mapa = L.map('mapa').setView([lat, lon], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -177,16 +177,20 @@
         }
     }
 
-    // Processa as informações do tempo e altera os estados do painel
+    // Processa os dados de resposta e alimenta o painel de voo
     function atualizarPainel(dados) {
-        const cidade = dados.name;
-        const pais = dados.sys.country;
-        const ventoVelocidade = Math.round(dados.wind.speed * 3.6); // Transforma m/s em km/h
+        if (!dados || !dados.wind || !dados.main) {
+            throw new Error("Dados meteorológicos incompletos.");
+        }
+
+        const cidade = dados.name || "Desconhecido";
+        const pais = dados.sys ? dados.sys.country : "";
+        const ventoVelocidade = Math.round(dados.wind.speed * 3.6); 
         const ventoRajada = dados.wind.gust ? Math.round(dados.wind.gust * 3.6) : 0;
         const chuvaVolume = dados.rain && dados.rain['1h'] ? dados.rain['1h'] : 0;
         const temp = Math.round(dados.main.temp);
 
-        // Renderiza no HTML
+        // Atualização da interface
         document.getElementById('nomeLocal').innerText = `Local: ${cidade}, ${pais}`;
         document.getElementById('valorVento').innerText = `${ventoVelocidade} km/h`;
         document.getElementById('valorRajada').innerText = `${ventoRajada} km/h`;
@@ -195,7 +199,7 @@
 
         const statusBox = document.getElementById('statusVoo');
         
-        // Regras para segurança do Drone (Altera conforme suas necessidades)
+        // Regras lógicas para a liberação de voo de drones
         if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaVolume > 0) {
             statusBox.innerText = "🔴 VOO PROIBIDO / PERIGOSO";
             statusBox.style.backgroundColor = "#dc3545";
@@ -210,11 +214,12 @@
             statusBox.style.color = "#fff";
         }
 
-        // Atualiza a posição visual do mapa
-        inicializarMapa(dados.coord.lat, dados.coord.lon);
+        if (dados.coord && dados.coord.lat && dados.coord.lon) {
+            inicializarMapa(dados.coord.lat, dados.coord.lon);
+        }
     }
 
-    // Acionando busca digitando o nome da Cidade
+    // Consulta enviando o nome da cidade digitado
     async function buscarPorCidade() {
         const cidade = document.getElementById('campoCidade').value.trim();
         if (!cidade) return alert("Por favor, digite o nome de uma cidade.");
@@ -228,9 +233,11 @@
             const url = `https://openweathermap.org{encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
             const resposta = await fetch(url);
             
-            if (!resposta.ok) throw new Error("Cidade não encontrada.");
+            if (!resposta.ok) {
+                if (resposta.status === 404) throw new Error("Cidade não encontrada no mapa.");
+                throw new Error("Erro na comunicação com o servidor de clima.");
+            }
             
-            // CORREÇÃO: Mudado de reply.json() para resposta.json()
             const dados = await resposta.json(); 
             atualizarPainel(dados);
         } catch (erro) {
@@ -240,7 +247,7 @@
         }
     }
 
-    // Acionando busca por coordenadas GPS do navegador
+    // Consulta usando a Geolocalização nativa do dispositivo
     function buscarPorGPS() {
         if (!navigator.geolocation) return alert("Seu navegador não suporta Geolocalização.");
 
@@ -254,22 +261,22 @@
                 const url = `https://openweathermap.org{lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
                 const resposta = await fetch(url);
                 
-                // CORREÇÃO: Mudado de reply.json() para resposta.json()
+                if (!resposta.ok) throw new Error("Não foi possível carregar as coordenadas atuais.");
+                
                 const dados = await resposta.json(); 
                 atualizarPainel(dados);
             } catch (erro) {
-                alert("Erro ao buscar dados meteorológicos do GPS.");
+                alert(erro.message);
                 statusBox.innerText = "❌ ERRO NA CONSULTA";
                 statusBox.style.backgroundColor = "#dc3545";
             }
         }, () => {
-            alert("Permissão de localização negada.");
+            alert("Acesso ao GPS recusado pelo usuário.");
             statusBox.innerText = "⚪ AGUARDANDO DADOS";
             statusBox.style.backgroundColor = "#555";
         });
     }
 
-    // Inicializa o mapa base ao carregar a página
     window.onload = () => inicializarMapa();
 </script>
 
