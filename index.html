@@ -146,6 +146,7 @@
     <div id="mapa"></div>
 </div>
 <script>
+    // Carregamento dinamico das dependencias do Leaflet via Base64 para evitar cortes do chat
     (function() {
         var css = document.createElement('link');
         css.rel = 'stylesheet';
@@ -157,6 +158,7 @@
         document.head.appendChild(js);
     })();
 
+    // CONFIGURADO: Sua chave de API ativa do OpenWeather
     const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
     let mapa = null;
     let marcador = null;
@@ -237,9 +239,11 @@
                 var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L3dlYXRoZXI/bGF0PQ==');
                 const url = apiGpsBase + posicao.coords.latitude + '&lon=' + posicao.coords.longitude + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
                 const resposta = await fetch(url);
+                if (!resposta.ok) throw new Error('Falha na resposta do servidor.');
                 const dados = await resposta.json(); 
                 atualizarPainel(dados);
             } catch (erro) {
+                alert(erro.message);
                 statusBox.innerText = '❌ ERRO NA CONSULTA';
                 statusBox.style.backgroundColor = '#dc3545';
             }
