@@ -258,42 +258,53 @@
         var latitude = lat || -27.5954;
         var longitude = lon || -48.5480;
         if (!mapa) {
-            mapa = L.map('mapa').setView([latitude, longitude], 11);
+            mapa = L.map('mapa', { zoomControl: true }).setView([latitude, longitude], 14); 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(mapa);
             marcador = L.marker([latitude, longitude]).addTo(mapa);
         } else {
-            mapa.setView([latitude, longitude], 11);
+            mapa.setView([latitude, longitude], 14);
             marcador.setLatLng([latitude, longitude]);
         }
+    }
+
+    async function descobrirBairroExato(lat, lon) {
+        try {
+            const urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
+            const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
+            if (!resposta.ok) return null;
+            const resultado = await resposta.json();
+            if (resultado && resultado.address) {
+                const bairro = resultado.address.suburb || resultado.address.neighbourhood || resultado.address.village || resultado.address.commercial;
+                const cidade = resultado.address.city || resultado.address.town || resultado.address.municipality;
+                if (bairro && cidade) return bairro + ', ' + cidade;
+                if (bairro) return bairro;
+            }
+            return null;
+        } catch (e) { return null; }
     }
 
     function processarDadosPrevisao(listaCompleta) {
         const filtrados = [];
         const datasVistas = [];
-        
-        listaCompleta.forEach(item => {
+        const listaComplete = listaCompleta || [];
+        listaComplete.forEach(item => {
             const dataTexto = item.dt_txt.split(' ')[0];
             const horaTexto = item.dt_txt.split(' ')[1];
-            
             if (!datasVistas.includes(dataTexto) && (horaTexto === '12:00:00' || horaTexto === '15:00:00')) {
                 datasVistas.push(dataTexto);
                 filtrados.push(item);
             }
         });
-
-        if (filtrados.length < 5) {
-            filtrados.unshift(listaCompleta[0]);
-        }
+        if (filtrados.length < 5 && listaComplete.length > 0) filtrados.unshift(listaComplete[0]);
         return filtrados.slice(0, 5);
     }
 
-    function atualizarLabelsAbas(dadosDias) {
+        function atualizarLabelsAbas(dadosDias) {
         const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         document.getElementById('aba0').innerText = 'Hoje';
         document.getElementById('aba1').innerText = 'Amanhã';
-        
         for (let i = 2; i < 5; i++) {
             if (dadosDias[i]) {
                 const dataObjeto = new Date(dadosDias[i].dt * 1000);
@@ -305,12 +316,8 @@
     function mudarAba(indice) {
         if (!dadosPrevisao[indice]) return;
         abaAtual = indice;
-        
-        for (let i = 0; i < 5; i++) {
-            document.getElementById('aba' + i).classList.remove('ativa');
-        }
+        for (let i = 0; i < 5; i++) document.getElementById('aba' + i).classList.remove('ativa');
         document.getElementById('aba' + indice).classList.add('ativa');
-        
         renderizarPainelDia(dadosPrevisao[indice]);
     }
 
@@ -352,6 +359,7 @@
 
         if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
             statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
             statusTexto.innerText = 'Condições desfavoráveis para voo';
         } else if (ventoVelocidade > 15 || ventoRajada > 22 || chuvaProb > 20) {
             statusBox.style.backgroundColor = '#ffc107';
@@ -364,14 +372,13 @@
         }
     }
 
-    function inicializarInterfaceCompleta(dadosGlobais) {
-        document.getElementById('nomeLocal').innerText = 'Local: ' + dadosGlobais.city.name + ', ' + dadosGlobais.city.country;
+    function inicializarInterfaceCompleta(dadosGlobais, nomeLugarCustomizado) {
+        const nomeFinal = nomeLugarCustomizado || (dadosGlobais.city.name + ', ' + dadosGlobais.city.country);
+        document.getElementById('nomeLocal').innerText = 'Local: ' + nomeFinal;
         dadosPrevisao = processarDadosPrevisao(dadosGlobais.list);
         atualizarLabelsAbas(dadosPrevisao);
         mudarAba(0);
-        if (dadosGlobais.city.coord) {
-            inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
-        }
+        if (dadosGlobais.city.coord) inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
     }
 
     async function buscarPorCidade() {
@@ -384,11 +391,13 @@
             const resposta = await fetch(url);
             if (!resposta.ok) throw new Error('Cidade não encontrada.');
             const dados = await resposta.json(); 
-            inicializarInterfaceCompleta(dados);
+            const localExato = await descobrirBairroExato(dados.city.coord.lat, dados.city.coord.lon);
+            inicializarInterfaceCompleta(dados, localExato);
         } catch (erro) {
             alert(erro.message);
             document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
             document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
+            document.getElementById('statusVoo').style.color = '#fff';
         }
     }
 
@@ -397,30 +406,33 @@
         document.getElementById('textoStatus').innerText = '⏳ OBTENDO GPS...';
         navigator.geolocation.getCurrentPosition(async (posicao) => {
             try {
+                const lat = posicao.coords.latitude;
+                const lon = posicao.coords.longitude;
+                const localExato = await descobrirBairroExato(lat, lon);
                 var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L2ZvcmVjYXN0P2xhdD0=');
-                const url = apiGpsBase + posicao.coords.latitude + '&lon=' + posicao.coords.longitude + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+                const url = apiGpsBase + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
                 const resposta = await fetch(url);
                 const dados = await resposta.json(); 
-                inicializarInterfaceCompleta(dados);
+                inicializarInterfaceCompleta(dados, localExato);
             } catch (erro) {
                 document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
                 document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
+                document.getElementById('statusVoo').style.color = '#fff';
             }
         }, () => {
             document.getElementById('textoStatus').innerText = '⚪ AGUARDANDO DADOS (GPS RECUSADO)';
-        });
+        }, { enableHighAccuracy: true, timeout: 10000 });
     }
-// Registra um Service Worker simples para validar a instalação do aplicativo
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGZ1bmN0aW9uKGV2ZW50KSB7fSk7')
-    .catch(function(err) { console.log("Erro Service Worker", err); });
-}
 
-// ALTERAÇÃO: Ao carregar a página completamente, o sistema já dispara a busca automática por GPS
-window.onload = function() { 
-    inicializarMapa(); 
-    buscarPorGPS(); 
-};
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGZ1bmN0aW9uKGV2ZW50KSB7fSk7')
+        .catch(function(err) { console.log(err); });
+    }
+
+    window.onload = function() { 
+        inicializarMapa(); 
+        buscarPorGPS(); 
+    };
 </script>
 </body>
 </html>
