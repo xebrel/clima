@@ -239,10 +239,10 @@
     (function() {
         var css = document.createElement('link');
         css.rel = 'stylesheet';
-        css.href = atob('aHR0cHM6Ly91bnBrZy5jb20vbGVhZmxldEAxLjkuNC9kaXN0L2xlYWZsZXQuY3Nz');
+        css.href = 'https://unpkg.com';
         document.head.appendChild(css);
         var js = document.createElement('script');
-        js.src = atob('aHR0cHM6Ly91bnBrZy5jb20vbGVhZmxldEAxLjkuNC9kaXN0L2xlYWZsZXQuanM=');
+        js.src = 'https://unpkg.com';
         js.onload = function() { inicializarMapa(); };
         document.head.appendChild(js);
     })();
@@ -271,7 +271,7 @@
 
     async function descobrirBairroExato(lat, lon) {
         try {
-            const urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
+            var urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
             const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
             if (!resposta.ok) return null;
             const resultado = await resposta.json();
@@ -290,14 +290,12 @@
         const datasVistas = [];
         const listaComplete = listaCompleta || [];
         listaComplete.forEach(item => {
-            const dataTexto = item.dt_txt.split(' ')[0];
-            const horaTexto = item.dt_txt.split(' ')[1];
-            if (!datasVistas.includes(dataTexto) && (horaTexto === '12:00:00' || horaTexto === '15:00:00')) {
+            const dataTexto = item.dt_txt.split(' ');
+            if (!datasVistas.includes(dataTexto)) {
                 datasVistas.push(dataTexto);
                 filtrados.push(item);
             }
         });
-        if (filtrados.length < 5 && listaComplete.length > 0) filtrados.unshift(listaComplete[0]);
         return filtrados.slice(0, 5);
     }
 
@@ -328,7 +326,6 @@
         const temp = Math.round(pontoClima.main.temp);
         const umidade = pontoClima.main.humidity;
         const nuvens = pontoClima.clouds.all;
-        
         const graus = pontoClima.wind.deg;
         let direcao = '↓ N';
         if (graus > 22.5 && graus <= 67.5) direcao = '↙ NE';
@@ -386,8 +383,7 @@
         if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
         document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
         try {
-            var apiBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L2ZvcmVjYXN0P3E9');
-            const url = apiBase + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+            var url = 'https://openweathermap.org' + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
             const resposta = await fetch(url);
             if (!resposta.ok) throw new Error('Cidade não encontrada.');
             const dados = await resposta.json(); 
@@ -409,8 +405,7 @@
                 const lat = posicao.coords.latitude;
                 const lon = posicao.coords.longitude;
                 const localExato = await descobrirBairroExato(lat, lon);
-                var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L2ZvcmVjYXN0P2xhdD0=');
-                const url = apiGpsBase + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+                var url = 'https://openweathermap.org' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
                 const resposta = await fetch(url);
                 const dados = await resposta.json(); 
                 inicializarInterfaceCompleta(dados, localExato);
@@ -425,8 +420,9 @@
     }
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGZ1bmN0aW9uKGV2ZW50KSB7fSk7')
-        .catch(function(err) { console.log(err); });
+        var blob = new Blob(['self.addEventListener("fetch", function(e){})'], {type: 'text/javascript'});
+        var urlSW = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(urlSW).catch(function(err) { console.log(err); });
     }
 
     window.onload = function() { 
