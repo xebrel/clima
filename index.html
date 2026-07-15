@@ -257,7 +257,6 @@
         }
     }
 
-    // Agrupa a resposta estendendo a busca para preencher as 5 abas de forma exata
     function processarDadosPrevisao(listaCompleta) {
         const filtrados = [];
         const datasVistas = [];
@@ -278,7 +277,6 @@
         return filtrados.slice(0, 5);
     }
 
-    // Gera os titulos abreviados corretos para caber na linha compacta sem quebras
     function atualizarLabelsAbas(dadosDias) {
         const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         document.getElementById('aba0').innerText = 'Hoje';
@@ -336,7 +334,6 @@
         const statusBox = document.getElementById('statusVoo');
         const statusTexto = document.getElementById('textoStatus');
 
-        // Aplicando classes de cantos arredondados com cores suaves baseadas no perigo
         elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : 'bom'));
         elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
         elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
@@ -398,11 +395,15 @@
                 document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
             }
         }, () => {
-            alert('GPS Recusado.');
+            document.getElementById('textoStatus').innerText = '⚪ AGUARDANDO DADOS (GPS RECUSADO)';
         });
     }
 
-    window.onload = function() { inicializarMapa(); };
+    // ALTERAÇÃO: Ao carregar a página completamente, o sistema já dispara a busca automática por GPS
+    window.onload = function() { 
+        inicializarMapa(); 
+        buscarPorGPS(); 
+    };
 </script>
 </body>
 </html>
