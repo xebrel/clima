@@ -10,40 +10,40 @@
             background-color: #121214;
             color: #fff;
             margin: 0;
-            padding: 15px;
+            padding: 12px;
             display: flex;
             justify-content: center;
         }
         .container {
             width: 100%;
-            max-width: 420px;
+            max-width: 410px;
             background-color: #1a1a1e;
             border-radius: 15px;
-            padding: 15px;
+            padding: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,.5);
             box-sizing: border-box;
         }
         .busca-container {
             display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 6px;
+            margin-bottom: 6px;
         }
         input {
             flex: 1;
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid #333;
             background-color: #26262b;
             color: #fff;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             box-sizing: border-box;
         }
         button {
             background-color: #00adb5;
             color: #fff;
             border: none;
-            padding: 10px 12px;
-            font-size: .9rem;
+            padding: 8px 12px;
+            font-size: .85rem;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
@@ -51,14 +51,14 @@
         .btn-gps {
             background-color: #28a745;
             width: 100%;
-            margin-bottom: 15px;
-            padding: 10px;
+            margin-bottom: 12px;
+            padding: 9px;
             color: #fff;
             border: none;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .abas-container {
             display: flex;
@@ -66,18 +66,22 @@
             border-radius: 8px 8px 0 0;
             overflow: hidden;
             border-bottom: 2px solid #333;
+            gap: 2px;
         }
         .aba {
             flex: 1;
-            padding: 12px 5px;
+            padding: 10px 2px;
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #888;
             cursor: pointer;
             background: none;
             border: none;
             transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .aba.ativa {
             color: #fff;
@@ -88,38 +92,38 @@
             background-color: #28a745;
             color: #fff;
             text-align: center;
-            padding: 10px;
+            padding: 8px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: background 0.3s;
         }
         .local-texto {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 400;
             opacity: 0.9;
-            margin-top: 2px;
+            margin-top: 1px;
         }
         .tabela-clima {
             background-color: #1a1a1e;
             border-radius: 0 0 8px 8px;
-            padding: 5px 10px;
+            padding: 2px 8px;
             border: 1px solid #26262b;
             border-top: none;
         }
         .secao-titulo {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: #00adb5;
             text-transform: uppercase;
-            padding: 8px 0 4px 0;
+            padding: 6px 0 2px 0;
             border-bottom: 1px solid #26262b;
         }
         .linha-dados {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            font-size: 0.9rem;
+            padding: 8px 0;
+            font-size: 0.85rem;
             border-bottom: 1px solid #26262b;
         }
         .linha-dados:last-child {
@@ -128,25 +132,35 @@
         .label-grupo {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             color: #ccc;
         }
         .valor-dados {
             font-weight: 700;
-            color: #28a745;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: inline-block;
         }
-        .valor-dados.perigo {
-            color: #dc3545;
+        .valor-dados.bom {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #2da949;
         }
         .valor-dados.atencao {
+            background-color: rgba(255, 193, 7, 0.2);
             color: #ffc107;
         }
+        .valor-dados.perigo {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #ea4354;
+        }
         #mapa {
-            height: 160px;
+            height: 140px;
             width: 100%;
             border-radius: 10px;
             border: 2px solid #26262b;
-            margin-top: 15px;
+            margin-top: 12px;
         }
     </style>
 </head>
@@ -162,6 +176,8 @@
         <button class="aba ativa" onclick="mudarAba(0)" id="aba0">Hoje</button>
         <button class="aba" onclick="mudarAba(1)" id="aba1">Amanhã</button>
         <button class="aba" onclick="mudarAba(2)" id="aba2">--</button>
+        <button class="aba" onclick="mudarAba(3)" id="aba3">--</button>
+        <button class="aba" onclick="mudarAba(4)" id="aba4">--</button>
     </div>
 
     <div class="painel-status" id="statusVoo">
@@ -181,17 +197,17 @@
         </div>
         <div class="linha-dados">
             <div class="label-grupo">🧭 Direção</div>
-            <div class="valor-dados" id="valorDirecao" style="color:#fff;">--</div>
+            <div class="valor-dados" id="valorDirecao">--</div>
         </div>
 
         <div class="secao-titulo">Condições</div>
         <div class="linha-dados">
             <div class="label-grupo">🌡️ Temperatura</div>
-            <div class="valor-dados" id="valorTemp" style="color:#fff;">-- °C</div>
+            <div class="valor-dados" id="valorTemp">-- °C</div>
         </div>
         <div class="linha-dados">
             <div class="label-grupo">💧 Umidade do Ar</div>
-            <div class="valor-dados" id="valorUmidade" style="color:#fff;">-- %</div>
+            <div class="valor-dados" id="valorUmidade">-- %</div>
         </div>
         <div class="linha-dados">
             <div class="label-grupo">🌧️ Probabilidade de Chuva</div>
@@ -199,14 +215,13 @@
         </div>
         <div class="linha-dados">
             <div class="label-grupo">☁️ Cobertura de Nuvens</div>
-            <div class="valor-dados" id="valorNuvens" style="color:#fff;">-- %</div>
+            <div class="valor-dados" id="valorNuvens">-- %</div>
         </div>
     </div>
 
     <div id="mapa"></div>
 </div>
 <script>
-    // Carregamento automatizado e protegido das bibliotecas do mapa Leaflet
     (function() {
         var css = document.createElement('link');
         css.rel = 'stylesheet';
@@ -240,7 +255,7 @@
         }
     }
 
-    // Organiza a resposta de 5 dias agrupando apenas 1 ponto meteorologico por dia (meio-dia)
+    // Agrupa a resposta estendendo a busca para preencher as 5 abas de forma exata
     function processarDadosPrevisao(listaCompleta) {
         const filtrados = [];
         const datasVistas = [];
@@ -249,29 +264,29 @@
             const dataTexto = item.dt_txt.split(' ')[0];
             const horaTexto = item.dt_txt.split(' ')[1];
             
-            // Prioriza pegar a medicao das 12:00 ou pega a primeira disponivel do dia
             if (!datasVistas.includes(dataTexto) && (horaTexto === '12:00:00' || horaTexto === '15:00:00')) {
                 datasVistas.push(dataTexto);
                 filtrados.push(item);
             }
         });
 
-        // Caso o dia atual ja tenha passado das 12h, garante o preenchimento correto
-        if(filtrados.length < 3) {
+        if (filtrados.length < 5) {
             filtrados.unshift(listaCompleta[0]);
         }
-        return filtrados.slice(0, 3);
+        return filtrados.slice(0, 5);
     }
 
-    // Configura os textos corretos nos botoes das abas com base nos dias da semana obtidos
+    // Gera os titulos abreviados corretos para caber na linha compacta sem quebras
     function atualizarLabelsAbas(dadosDias) {
-        const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         document.getElementById('aba0').innerText = 'Hoje';
         document.getElementById('aba1').innerText = 'Amanhã';
         
-        if (dadosDias[2]) {
-            const dataObjeto = new Date(dadosDias[2].dt * 1000);
-            document.getElementById('aba2').innerText = diasSemana[dataObjeto.getDay()];
+        for (let i = 2; i < 5; i++) {
+            if (dadosDias[i]) {
+                const dataObjeto = new Date(dadosDias[i].dt * 1000);
+                document.getElementById('aba' + i).innerText = diasSemana[dataObjeto.getDay()];
+            }
         }
     }
 
@@ -279,7 +294,7 @@
         if (!dadosPrevisao[indice]) return;
         abaAtual = indice;
         
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 5; i++) {
             document.getElementById('aba' + i).classList.remove('ativa');
         }
         document.getElementById('aba' + indice).classList.add('ativa');
@@ -287,7 +302,6 @@
         renderizarPainelDia(dadosPrevisao[indice]);
     }
 
-    // Renderiza as informacoes na tela respeitando os estilos da imagem do app comercial
     function renderizarPainelDia(pontoClima) {
         const ventoVelocidade = Math.round(pontoClima.wind.speed * 3.6);
         const ventoRajada = pontoClima.wind.gust ? Math.round(pontoClima.wind.gust * 3.6) : Math.round(pontoClima.wind.speed * 1.2 * 3.6);
@@ -296,7 +310,6 @@
         const umidade = pontoClima.main.humidity;
         const nuvens = pontoClima.clouds.all;
         
-        // Conversor simples de graus para direcoes cardeais
         const graus = pontoClima.wind.deg;
         let direcao = '↓ N';
         if (graus > 22.5 && graus <= 67.5) direcao = '↙ NE';
@@ -315,16 +328,16 @@
         document.getElementById('valorChuva').innerText = chuvaProb + ' %';
         document.getElementById('valorNuvens').innerText = nuvens + ' %';
 
-        // Lógica de seguranca de voo aplicada nas cores das variaveis
         const elVento = document.getElementById('valorVento');
         const elRajada = document.getElementById('valorRajada');
         const elChuva = document.getElementById('valorChuva');
         const statusBox = document.getElementById('statusVoo');
         const statusTexto = document.getElementById('textoStatus');
 
-        elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : ''));
-        elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : ''));
-        elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : ''));
+        // Aplicando classes de cantos arredondados com cores suaves baseadas no perigo
+        elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : 'bom'));
+        elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
+        elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
 
         if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
             statusBox.style.backgroundColor = '#dc3545';
@@ -342,11 +355,9 @@
 
     function inicializarInterfaceCompleta(dadosGlobais) {
         document.getElementById('nomeLocal').innerText = 'Local: ' + dadosGlobais.city.name + ', ' + dadosGlobais.city.country;
-        
         dadosPrevisao = processarDadosPrevisao(dadosGlobais.list);
         atualizarLabelsAbas(dadosPrevisao);
         mudarAba(0);
-        
         if (dadosGlobais.city.coord) {
             inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
         }
