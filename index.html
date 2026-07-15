@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneWeather Pro</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #121214;
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #1a1a1e;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #00adb5;
+        }
+
+        .local-info {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaaaaa;
+            margin-bottom: 15px;
+        }
+
+        .status-box {
+            background-color: #555555;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .busca-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: #26262b;
+            color: white;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #00adb5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-gps {
+            background-color: #28a745;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 12px;
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .grid-clima {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background-color: #26262b;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #00adb5;
+        }
+
+        .card-titulo {
+            font-size: 0.85rem;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .card-valor {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>DroneWeather Pro</h2>
+        
+        <div class="local-info" id="nomeLocal">Local: Aguardando consulta...</div>
+
+        <div class="status-box" id="statusVoo">
+            ⚪ AGUARDANDO DADOS
+        </div>
+
+        <div class="busca-container">
+            <input type="text" id="campoCidade" placeholder="Digite a cidade (Ex: Sao Paulo)">
+            <button onclick="buscarPorCidade()">Buscar</button>
+        </div>
+
+        <button class="btn-gps" onclick="tentarObterLocalizacao()">📍 Pegar Minha Localização</button>
+
+        <div class="grid-clima">
+            <div class="card">
+                <div class="card-titulo">Vento Atual</div>
+                <div class="card-valor" id="txtVento">-- km/h</div>
+            </div>
+            <div class="card">
+                <div class="card-titulo">Chuva</div>
+                <div class="card-valor" id="txtChuva">-- mm</div>
+            </div>
+            <div class="card">
+                <div class="card-titulo">Satélites GPS</div>
+                <div class="card-valor">Simulado</div>
+            </div>
+            <div class="card">
+                <div class="card-titulo">Índice KP</div>
+                <div class="card-valor">Simulado</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LIMITE_VENTO = 20; 
+
+        async function consultarClimaReal(lat, lon, nomeCidade) {
+            const status = document.getElementById("statusVoo");
+            const urlClima = `https://open-meteo.com{lat}&longitude=${lon}&current=wind_speed_10m,precipitation`;
+            
+            try {
+                const resposta = await fetch(urlClima);
+                const dados = await resposta.json();
+                
+                const vento = dados.current.wind_speed_10m;
+                const chuva = dados.current.precipitation;
+                
+                document.getElementById("nomeLocal").innerText = "Local: " + nomeCidade;
+                document.getElementById("txtVento").innerText = vento + " km/h";
+                document.getElementById("txtChuva").innerText = chuva + " mm";
+                
+                if (chuva > 0 && vento > LIMITE_VENTO) {
+                    status.innerText = "🔴 VOO PROIBIDO: CHUVA E VENTO FORTE";
+                    status.style.backgroundColor = "#d9534f";
+                } else if (chuva > 0) {
+                    status.innerText = "🔴 VOO PROIBIDO: RISCO DE CHUVA";
+                    status.style.backgroundColor = "#d9534f";
+                } else if (vento > LIMITE_VENTO) {
+                    status.innerText = "🔴 VOO PROIBIDO: VENTO FORTE (" + vento + " km/h)";
+                    status.style.backgroundColor = "#d9534f";
+                } else {
+                    status.innerText = "🟢 CONDIÇÕES SEGURAS PARA VOO";
+                    status.style.backgroundColor = "#04b445";
+                }
+                
+            } catch (erro) {
+                alert("Erro ao buscar dados climáticos.");
+                status.innerText = "🔴 ERRO DE CONEXÃO";
+            }
+        }
+
+        async function buscarPorCidade() {
+            const cidadeInput = document.getElementById("campoCidade").value;
+            if (!cidadeInput) return alert("Digite o nome de uma cidade!");
+            
+            const status = document.getElementById("statusVoo");
+            status.innerText = "⏳ BUSCANDO...";
+            status.style.backgroundColor = "#555555";
+            
+            const cidadeFormatada = cidadeInput.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const urlGeocoding = `https://open-meteo.com{encodeURIComponent(cidadeFormatada)}&count=1&language=pt`;
+            
+            try {
+                const resposta = await fetch(urlGeocoding);
+                const dados = await resposta.json();
+                
+                if (dados.results && dados.results.length > 0) {
+                    const local = dados.results[0]; // Correção crucial aplicada aqui
+                    const nomeExibicao = local.name + ", " + (local.admin1 || local.country);
+                    consultarClimaReal(local.latitude, local.longitude, nomeExibicao);
+                } else {
+                    alert("Cidade não encontrada. Verifique a ortografia.");
+                    status.innerText = "🔴 NÃO ENCONTRADO";
+                }
+            } catch (erro) {
+                alert("Falha de comunicação ao buscar o endereço.");
+                status.innerText = "🔴 FALHA NA BUSCA";
+            }
+        }
+
+        function tentarObterLocalizacao() {
+            document.getElementById("statusVoo").innerText = "⏳ LOCALIZANDO...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (posicao) => {
+                        const lat = posicao.coords.latitude;
+                        const lon = posicao.coords.longitude;
+                        consultarClimaReal(lat, lon, "Sua Posição (" + lat.toFixed(2) + ", " + lon.toFixed(2) + ")");
+                    },
+                    () => {
+                        buscarPorIP();
+                    }
+                );
+            } else {
+                buscarPorIP();
+            }
+        }
+
+        async function buscarPorIP() {
+            try {
+                const resposta = await fetch("https://ipapi.co");
+                const dados = await resposta.json();
+                if (dados.city) {
+                    consultarClimaReal(dados.latitude, dados.longitude, dados.city + ", " + dados.region);
+                } else {
+                    alert("Não foi possível rastrear a localização aproximada.");
+                    document.getElementById("statusVoo").innerText = "🔴 LOCAL FALHOU";
+                }
+            } catch (e) {
+                alert("Erro ao obter localização por rede.");
+                document.getElementById("statusVoo").innerText = "🔴 ERRO DE REDE";
+            }
+        }
+    </script>
+
+</body>
+</html>
