@@ -1,50 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DroneWeather Pro</title>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #121214;
+            overflow: hidden; 
+        }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #121214;
             color: #fff;
-            margin: 0;
-            padding: 12px;
             display: flex;
             justify-content: center;
+            align-items: stretch;
         }
         .container {
             width: 100%;
-            max-width: 410px;
+            max-width: 450px;
+            height: 100%; 
             background-color: #1a1a1e;
-            border-radius: 15px;
-            padding: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,.5);
+            padding: 14px;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column; 
+            overflow-y: auto; /* Garante rolagem fluida caso o texto aumentado precise de espaço */
         }
         .busca-container {
             display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
         input {
             flex: 1;
-            padding: 8px 12px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #333;
             background-color: #26262b;
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 1.05rem; /* Aumentado */
             box-sizing: border-box;
         }
         button {
             background-color: #00adb5;
             color: #fff;
             border: none;
-            padding: 8px 12px;
-            font-size: .85rem;
+            padding: 12px 16px;
+            font-size: 1rem; /* Aumentado */
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
@@ -53,13 +60,14 @@
             background-color: #28a745;
             width: 100%;
             margin-bottom: 12px;
-            padding: 9px;
+            padding: 12px;
             color: #fff;
             border: none;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 1rem; /* Aumentado */
+            flex-shrink: 0;
         }
         .abas-container {
             display: flex;
@@ -68,21 +76,20 @@
             overflow: hidden;
             border-bottom: 2px solid #333;
             gap: 2px;
+            flex-shrink: 0;
         }
         .aba {
             flex: 1;
-            padding: 10px 2px;
+            padding: 14px 2px; /* Maior área de toque */
             text-align: center;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.85rem; /* Aumentado */
+            font-weight: 700;
             color: #888;
             cursor: pointer;
             background: none;
             border: none;
             transition: all 0.2s;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .aba.ativa {
             color: #fff;
@@ -93,40 +100,42 @@
             background-color: #28a745;
             color: #fff;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 1.1rem; /* Aumentado */
             transition: background 0.3s;
             border-radius: 8px;
-            margin-top: 4px;
+            margin-top: 6px;
+            flex-shrink: 0;
         }
         .local-texto {
-            font-size: 0.7rem;
+            font-size: 0.85rem; /* Aumentado */
             font-weight: 400;
             opacity: 0.9;
-            margin-top: 1px;
+            margin-top: 3px;
         }
         .tabela-clima {
             background-color: #1a1a1e;
             border-radius: 0 0 8px 8px;
-            padding: 2px 8px;
+            padding: 4px 10px;
             border: 1px solid #26262b;
-            border-top: none;
+            margin-top: 6px;
+            flex-shrink: 0;
         }
         .secao-titulo {
-            font-size: 0.75rem;
+            font-size: 0.85rem; /* Aumentado */
             font-weight: 700;
             color: #00adb5;
             text-transform: uppercase;
-            padding: 6px 0 2px 0;
+            padding: 8px 0 4px 0;
             border-bottom: 1px solid #26262b;
         }
         .linha-dados {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            font-size: 0.85rem;
+            padding: 10px 0;
+            font-size: 1rem; /* Aumentado (Texto principal das variáveis) */
             border-bottom: 1px solid #26262b;
         }
         .linha-dados:last-child {
@@ -135,15 +144,15 @@
         .label-grupo {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             color: #ccc;
         }
         .valor-dados {
             font-weight: 700;
             color: #fff;
-            padding: 2px 8px;
+            padding: 4px 10px; /* Maior destaque na tag arredondada */
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.95rem; /* Aumentado */
             display: inline-block;
         }
         .valor-dados.bom {
@@ -159,11 +168,13 @@
             color: #ea4354;
         }
         #mapa {
-            height: 140px;
             width: 100%;
             border-radius: 10px;
             border: 2px solid #26262b;
             margin-top: 12px;
+            margin-bottom: 4px;
+            flex: 1; 
+            min-height: 150px; /* Garante que o mapa mantenha uma boa área de visão */
         }
     </style>
 </head>
