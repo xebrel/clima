@@ -16,40 +16,17 @@
         }
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             background-color: #1a1a1e;
             border-radius: 15px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,.5);
             box-sizing: border-box;
         }
-        h2 {
-            text-align: center;
-            margin-top: 0;
-            color: #00adb5;
-        }
-        .local-info {
-            text-align: center;
-            font-size: .9rem;
-            color: #aaa;
-            margin-bottom: 15px;
-        }
-        .status-box {
-            background-color: #555;
-            color: #fff;
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.2);
-            transition: background 0.3s, color 0.3s;
-        }
         .busca-container {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         input {
             flex: 1;
@@ -58,15 +35,14 @@
             border: 1px solid #333;
             background-color: #26262b;
             color: #fff;
-            font-size: 1rem;
-            width: 100%;
+            font-size: 0.95rem;
             box-sizing: border-box;
         }
         button {
             background-color: #00adb5;
             color: #fff;
             border: none;
-            padding: 10px 15px;
+            padding: 10px 12px;
             font-size: .9rem;
             font-weight: 700;
             border-radius: 8px;
@@ -75,78 +51,162 @@
         .btn-gps {
             background-color: #28a745;
             width: 100%;
-            margin-bottom: 20px;
-            padding: 12px;
+            margin-bottom: 15px;
+            padding: 10px;
             color: #fff;
             border: none;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
+            font-size: 0.9rem;
         }
-        .grid-clima {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .card {
+        .abas-container {
+            display: flex;
             background-color: #26262b;
-            padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            border-bottom: 2px solid #333;
+        }
+        .aba {
+            flex: 1;
+            padding: 12px 5px;
             text-align: center;
-            border-left: 4px solid #00adb5;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: all 0.2s;
         }
-        .card-titulo {
-            font-size: .85rem;
-            color: #aaa;
-            text-transform: uppercase;
-            margin-bottom: 5px;
+        .aba.ativa {
+            color: #fff;
+            background-color: #1a1a1e;
+            border-bottom: 3px solid #28a745;
         }
-        .card-valor {
-            font-size: 1.3rem;
+        .painel-status {
+            background-color: #28a745;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
             font-weight: 700;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        .local-texto {
+            font-size: 0.75rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        .tabela-clima {
+            background-color: #1a1a1e;
+            border-radius: 0 0 8px 8px;
+            padding: 5px 10px;
+            border: 1px solid #26262b;
+            border-top: none;
+        }
+        .secao-titulo {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #00adb5;
+            text-transform: uppercase;
+            padding: 8px 0 4px 0;
+            border-bottom: 1px solid #26262b;
+        }
+        .linha-dados {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #26262b;
+        }
+        .linha-dados:last-child {
+            border-bottom: none;
+        }
+        .label-grupo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+        }
+        .valor-dados {
+            font-weight: 700;
+            color: #28a745;
+        }
+        .valor-dados.perigo {
+            color: #dc3545;
+        }
+        .valor-dados.atencao {
+            color: #ffc107;
         }
         #mapa {
-            height: 200px;
+            height: 160px;
             width: 100%;
             border-radius: 10px;
             border: 2px solid #26262b;
-            margin-top: 10px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>DroneWeather Pro</h2>
-    <div class="local-info" id="nomeLocal">Local: Aguardando consulta...</div>
-    <div class="status-box" id="statusVoo">⚪ AGUARDANDO DADOS</div>
     <div class="busca-container">
         <input type="text" id="campoCidade" placeholder="Digite a cidade...">
         <button onclick="buscarPorCidade()">Buscar</button>
     </div>
     <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
-    <div class="grid-clima">
-        <div class="card">
-            <div class="card-titulo">Vento</div>
-            <div class="card-valor" id="valorVento">-- km/h</div>
+
+    <div class="abas-container" id="containerAbas">
+        <button class="aba ativa" onclick="mudarAba(0)" id="aba0">Hoje</button>
+        <button class="aba" onclick="mudarAba(1)" id="aba1">Amanhã</button>
+        <button class="aba" onclick="mudarAba(2)" id="aba2">--</button>
+    </div>
+
+    <div class="painel-status" id="statusVoo">
+        <span id="textoStatus">Aguardando dados...</span>
+        <div class="local-texto" id="nomeLocal">Local: --</div>
+    </div>
+
+    <div class="tabela-clima">
+        <div class="secao-titulo">Vento</div>
+        <div class="linha-dados">
+            <div class="label-grupo">💨 Velocidade do Vento</div>
+            <div class="valor-dados" id="valorVento">-- km/h</div>
         </div>
-        <div class="card">
-            <div class="card-titulo">Rajada</div>
-            <div class="card-valor" id="valorRajada">-- km/h</div>
+        <div class="linha-dados">
+            <div class="label-grupo">🌪️ Rajada de Vento</div>
+            <div class="valor-dados" id="valorRajada">-- km/h</div>
         </div>
-        <div class="card">
-            <div class="card-titulo">Chuva (1h)</div>
-            <div class="card-valor" id="valorChuva">-- mm</div>
+        <div class="linha-dados">
+            <div class="label-grupo">🧭 Direção</div>
+            <div class="valor-dados" id="valorDirecao" style="color:#fff;">--</div>
         </div>
-        <div class="card">
-            <div class="card-titulo">Temperatura</div>
-            <div class="card-valor" id="valorTemp">-- °C</div>
+
+        <div class="secao-titulo">Condições</div>
+        <div class="linha-dados">
+            <div class="label-grupo">🌡️ Temperatura</div>
+            <div class="valor-dados" id="valorTemp" style="color:#fff;">-- °C</div>
+        </div>
+        <div class="linha-dados">
+            <div class="label-grupo">💧 Umidade do Ar</div>
+            <div class="valor-dados" id="valorUmidade" style="color:#fff;">-- %</div>
+        </div>
+        <div class="linha-dados">
+            <div class="label-grupo">🌧️ Probabilidade de Chuva</div>
+            <div class="valor-dados" id="valorChuva">-- %</div>
+        </div>
+        <div class="linha-dados">
+            <div class="label-grupo">☁️ Cobertura de Nuvens</div>
+            <div class="valor-dados" id="valorNuvens" style="color:#fff;">-- %</div>
         </div>
     </div>
+
     <div id="mapa"></div>
 </div>
 <script>
-    // Carregamento dinamico das dependencias do Leaflet via Base64 para evitar cortes do chat
+    // Carregamento automatizado e protegido das bibliotecas do mapa Leaflet
     (function() {
         var css = document.createElement('link');
         css.rel = 'stylesheet';
@@ -158,98 +218,174 @@
         document.head.appendChild(js);
     })();
 
-    // CONFIGURADO: Sua chave de API ativa do OpenWeather
     const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
     let mapa = null;
     let marcador = null;
+    let dadosPrevisao = []; 
+    let abaAtual = 0;
 
     function inicializarMapa(lat, lon) {
         if (typeof L === 'undefined') return;
         var latitude = lat || -27.5954;
         var longitude = lon || -48.5480;
         if (!mapa) {
-            mapa = L.map('mapa').setView([latitude, longitude], 12);
+            mapa = L.map('mapa').setView([latitude, longitude], 11);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(mapa);
             marcador = L.marker([latitude, longitude]).addTo(mapa);
         } else {
-            mapa.setView([latitude, longitude], 12);
+            mapa.setView([latitude, longitude], 11);
             marcador.setLatLng([latitude, longitude]);
         }
     }
 
-    function atualizarPainel(dados) {
-        if (!dados || !dados.wind || !dados.main) return;
-        const cidade = dados.name || 'Desconhecido';
-        const pais = dados.sys ? dados.sys.country : '';
-        const ventoVelocidade = Math.round(dados.wind.speed * 3.6); 
-        const ventoRajada = dados.wind.gust ? Math.round(dados.wind.gust * 3.6) : 0;
-        const chuvaVolume = dados.rain && dados.rain['1h'] ? dados.rain['1h'] : 0;
-        const temp = Math.round(dados.main.temp);
+    // Organiza a resposta de 5 dias agrupando apenas 1 ponto meteorologico por dia (meio-dia)
+    function processarDadosPrevisao(listaCompleta) {
+        const filtrados = [];
+        const datasVistas = [];
+        
+        listaCompleta.forEach(item => {
+            const dataTexto = item.dt_txt.split(' ')[0];
+            const horaTexto = item.dt_txt.split(' ')[1];
+            
+            // Prioriza pegar a medicao das 12:00 ou pega a primeira disponivel do dia
+            if (!datasVistas.includes(dataTexto) && (horaTexto === '12:00:00' || horaTexto === '15:00:00')) {
+                datasVistas.push(dataTexto);
+                filtrados.push(item);
+            }
+        });
 
-        document.getElementById('nomeLocal').innerText = 'Local: ' + cidade + ', ' + pais;
+        // Caso o dia atual ja tenha passado das 12h, garante o preenchimento correto
+        if(filtrados.length < 3) {
+            filtrados.unshift(listaCompleta[0]);
+        }
+        return filtrados.slice(0, 3);
+    }
+
+    // Configura os textos corretos nos botoes das abas com base nos dias da semana obtidos
+    function atualizarLabelsAbas(dadosDias) {
+        const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        document.getElementById('aba0').innerText = 'Hoje';
+        document.getElementById('aba1').innerText = 'Amanhã';
+        
+        if (dadosDias[2]) {
+            const dataObjeto = new Date(dadosDias[2].dt * 1000);
+            document.getElementById('aba2').innerText = diasSemana[dataObjeto.getDay()];
+        }
+    }
+
+    function mudarAba(indice) {
+        if (!dadosPrevisao[indice]) return;
+        abaAtual = indice;
+        
+        for (let i = 0; i < 3; i++) {
+            document.getElementById('aba' + i).classList.remove('ativa');
+        }
+        document.getElementById('aba' + indice).classList.add('ativa');
+        
+        renderizarPainelDia(dadosPrevisao[indice]);
+    }
+
+    // Renderiza as informacoes na tela respeitando os estilos da imagem do app comercial
+    function renderizarPainelDia(pontoClima) {
+        const ventoVelocidade = Math.round(pontoClima.wind.speed * 3.6);
+        const ventoRajada = pontoClima.wind.gust ? Math.round(pontoClima.wind.gust * 3.6) : Math.round(pontoClima.wind.speed * 1.2 * 3.6);
+        const chuvaProb = pontoClima.pop ? Math.round(pontoClima.pop * 100) : 0;
+        const temp = Math.round(pontoClima.main.temp);
+        const umidade = pontoClima.main.humidity;
+        const nuvens = pontoClima.clouds.all;
+        
+        // Conversor simples de graus para direcoes cardeais
+        const graus = pontoClima.wind.deg;
+        let direcao = '↓ N';
+        if (graus > 22.5 && graus <= 67.5) direcao = '↙ NE';
+        else if (graus > 67.5 && graus <= 112.5) direcao = '← L';
+        else if (graus > 112.5 && graus <= 157.5) direcao = '↖ SE';
+        else if (graus > 157.5 && graus <= 202.5) direcao = '↑ S';
+        else if (graus > 202.5 && graus <= 247.5) direcao = '↗ SO';
+        else if (graus > 247.5 && graus <= 292.5) direcao = '→ O';
+        else if (graus > 292.5 && graus <= 337.5) direcao = '↘ NO';
+
         document.getElementById('valorVento').innerText = ventoVelocidade + ' km/h';
         document.getElementById('valorRajada').innerText = ventoRajada + ' km/h';
-        document.getElementById('valorChuva').innerText = chuvaVolume + ' mm';
+        document.getElementById('valorDirecao').innerText = direcao;
         document.getElementById('valorTemp').innerText = temp + ' °C';
+        document.getElementById('valorUmidade').innerText = umidade + ' %';
+        document.getElementById('valorChuva').innerText = chuvaProb + ' %';
+        document.getElementById('valorNuvens').innerText = nuvens + ' %';
 
+        // Lógica de seguranca de voo aplicada nas cores das variaveis
+        const elVento = document.getElementById('valorVento');
+        const elRajada = document.getElementById('valorRajada');
+        const elChuva = document.getElementById('valorChuva');
         const statusBox = document.getElementById('statusVoo');
-        if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaVolume > 0) {
-            statusBox.innerText = '🔴 VOO PROIBIDO / PERIGOSO';
+        const statusTexto = document.getElementById('textoStatus');
+
+        elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : ''));
+        elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : ''));
+        elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : ''));
+
+        if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
             statusBox.style.backgroundColor = '#dc3545';
-            statusBox.style.color = '#fff';
-        } else if (ventoVelocidade > 15 || ventoRajada > 22) {
-            statusBox.innerText = '🟡 VOO COM CAUTELA / ATENÇÃO';
+            statusTexto.innerText = 'Condições desfavoráveis para voo';
+        } else if (ventoVelocidade > 15 || ventoRajada > 22 || chuvaProb > 20) {
             statusBox.style.backgroundColor = '#ffc107';
             statusBox.style.color = '#000';
+            statusTexto.innerText = 'Voo com cautela / atenção';
         } else {
-            statusBox.innerText = '🟢 VOO LIBERADO';
             statusBox.style.backgroundColor = '#28a745';
             statusBox.style.color = '#fff';
+            statusTexto.innerText = 'Boas condições para voo';
         }
-        if (dados.coord) inicializarMapa(dados.coord.lat, dados.coord.lon);
+    }
+
+    function inicializarInterfaceCompleta(dadosGlobais) {
+        document.getElementById('nomeLocal').innerText = 'Local: ' + dadosGlobais.city.name + ', ' + dadosGlobais.city.country;
+        
+        dadosPrevisao = processarDadosPrevisao(dadosGlobais.list);
+        atualizarLabelsAbas(dadosPrevisao);
+        mudarAba(0);
+        
+        if (dadosGlobais.city.coord) {
+            inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
+        }
     }
 
     async function buscarPorCidade() {
         const cidade = document.getElementById('campoCidade').value.trim();
         if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
-        const statusBox = document.getElementById('statusVoo');
-        statusBox.innerText = '⏳ BUSCANDO DADOS...';
+        document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
         try {
-            var apiBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L3dlYXRoZXI/cT0=');
+            var apiBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L2ZvcmVjYXN0P3E9');
             const url = apiBase + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
             const resposta = await fetch(url);
             if (!resposta.ok) throw new Error('Cidade não encontrada.');
             const dados = await resposta.json(); 
-            atualizarPainel(dados);
+            inicializarInterfaceCompleta(dados);
         } catch (erro) {
             alert(erro.message);
-            statusBox.innerText = '❌ ERRO NA CONSULTA';
-            statusBox.style.backgroundColor = '#dc3545';
+            document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
+            document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
         }
     }
 
     function buscarPorGPS() {
         if (!navigator.geolocation) return alert('Sem suporte a GPS.');
-        const statusBox = document.getElementById('statusVoo');
-        statusBox.innerText = '⏳ OBTENDO GPS...';
+        document.getElementById('textoStatus').innerText = '⏳ OBTENDO GPS...';
         navigator.geolocation.getCurrentPosition(async (posicao) => {
             try {
-                var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L3dlYXRoZXI/bGF0PQ==');
+                var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L2ZvcmVjYXN0P2xhdD0=');
                 const url = apiGpsBase + posicao.coords.latitude + '&lon=' + posicao.coords.longitude + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
                 const resposta = await fetch(url);
-                if (!resposta.ok) throw new Error('Falha na resposta do servidor.');
                 const dados = await resposta.json(); 
-                atualizarPainel(dados);
+                inicializarInterfaceCompleta(dados);
             } catch (erro) {
-                alert(erro.message);
-                statusBox.innerText = '❌ ERRO NA CONSULTA';
-                statusBox.style.backgroundColor = '#dc3545';
+                document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
+                document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
             }
         }, () => {
             alert('GPS Recusado.');
-            statusBox.innerText = '⚪ AGUARDANDO DADOS';
         });
     }
 
