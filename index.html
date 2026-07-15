@@ -5,177 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DroneWeather Pro</title>
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #121214;
-            overflow: hidden; 
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: stretch;
-        }
-        .container {
-            width: 100%;
-            max-width: 450px;
-            height: 100%; 
-            background-color: #1a1a1e;
-            padding: 14px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
-            overflow-y: auto; /* Garante rolagem fluida caso o texto aumentado precise de espaço */
-        }
-        .busca-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            flex-shrink: 0;
-        }
-        input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background-color: #26262b;
-            color: #fff;
-            font-size: 1.05rem; /* Aumentado */
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #00adb5;
-            color: #fff;
-            border: none;
-            padding: 12px 16px;
-            font-size: 1rem; /* Aumentado */
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .btn-gps {
-            background-color: #28a745;
-            width: 100%;
-            margin-bottom: 12px;
-            padding: 12px;
-            color: #fff;
-            border: none;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem; /* Aumentado */
-            flex-shrink: 0;
-        }
-        .abas-container {
-            display: flex;
-            background-color: #26262b;
-            border-radius: 8px 8px 0 0;
-            overflow: hidden;
-            border-bottom: 2px solid #333;
-            gap: 2px;
-            flex-shrink: 0;
-        }
-        .aba {
-            flex: 1;
-            padding: 14px 2px; /* Maior área de toque */
-            text-align: center;
-            font-size: 0.85rem; /* Aumentado */
-            font-weight: 700;
-            color: #888;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .aba.ativa {
-            color: #fff;
-            background-color: #1a1a1e;
-            border-bottom: 3px solid #28a745;
-        }
-        .painel-status {
-            background-color: #28a745;
-            color: #fff;
-            text-align: center;
-            padding: 12px;
-            font-weight: 700;
-            font-size: 1.1rem; /* Aumentado */
-            transition: background 0.3s;
-            border-radius: 8px;
-            margin-top: 6px;
-            flex-shrink: 0;
-        }
-        .local-texto {
-            font-size: 0.85rem; /* Aumentado */
-            font-weight: 400;
-            opacity: 0.9;
-            margin-top: 3px;
-        }
-        .tabela-clima {
-            background-color: #1a1a1e;
-            border-radius: 0 0 8px 8px;
-            padding: 4px 10px;
-            border: 1px solid #26262b;
-            margin-top: 6px;
-            flex-shrink: 0;
-        }
-        .secao-titulo {
-            font-size: 0.85rem; /* Aumentado */
-            font-weight: 700;
-            color: #00adb5;
-            text-transform: uppercase;
-            padding: 8px 0 4px 0;
-            border-bottom: 1px solid #26262b;
-        }
-        .linha-dados {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            font-size: 1rem; /* Aumentado (Texto principal das variáveis) */
-            border-bottom: 1px solid #26262b;
-        }
-        .linha-dados:last-child {
-            border-bottom: none;
-        }
-        .label-grupo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #ccc;
-        }
-        .valor-dados {
-            font-weight: 700;
-            color: #fff;
-            padding: 4px 10px; /* Maior destaque na tag arredondada */
-            border-radius: 6px;
-            font-size: 0.95rem; /* Aumentado */
-            display: inline-block;
-        }
-        .valor-dados.bom {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #2da949;
-        }
-        .valor-dados.atencao {
-            background-color: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-        .valor-dados.perigo {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #ea4354;
-        }
-        #mapa {
-            width: 100%;
-            border-radius: 10px;
-            border: 2px solid #26262b;
-            margin-top: 12px;
-            margin-bottom: 4px;
-            flex: 1; 
-            min-height: 150px; /* Garante que o mapa mantenha uma boa área de visão */
-        }
+        html, body { height: 100%; margin: 0; padding: 0; background-color: #121214; overflow: hidden; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #fff; display: flex; justify-content: center; align-items: stretch; }
+        .container { width: 100%; max-width: 450px; height: 100%; background-color: #1a1a1e; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; }
+        .busca-container { display: flex; gap: 8px; margin-bottom: 8px; flex-shrink: 0; }
+        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background-color: #26262b; color: #fff; font-size: 1.05rem; box-sizing: border-box; }
+        button { background-color: #00adb5; color: #fff; border: none; padding: 12px 16px; font-size: 1rem; font-weight: 700; border-radius: 8px; cursor: pointer; }
+        .btn-gps { background-color: #28a745; width: 100%; margin-bottom: 12px; padding: 12px; color: #fff; border: none; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 1rem; flex-shrink: 0; }
+        .abas-container { display: flex; background-color: #26262b; border-radius: 8px 8px 0 0; overflow: hidden; border-bottom: 2px solid #333; gap: 2px; flex-shrink: 0; }
+        .aba { flex: 1; padding: 14px 2px; text-align: center; font-size: 0.85rem; font-weight: 700; color: #888; cursor: pointer; background: none; border: none; transition: all 0.2s; white-space: nowrap; }
+        .aba.ativa { color: #fff; background-color: #1a1a1e; border-bottom: 3px solid #28a745; }
+        .painel-status { background-color: #28a745; color: #fff; text-align: center; padding: 12px; font-weight: 700; font-size: 1.1rem; transition: background 0.3s; border-radius: 8px; margin-top: 6px; flex-shrink: 0; }
+        .local-texto { font-size: 0.85rem; font-weight: 400; opacity: 0.9; margin-top: 3px; }
+        .tabela-clima { background-color: #1a1a1e; border-radius: 0 0 8px 8px; padding: 4px 10px; border: 1px solid #26262b; margin-top: 6px; flex-shrink: 0; }
+        .secao-titulo { font-size: 0.85rem; font-weight: 700; color: #00adb5; text-transform: uppercase; padding: 8px 0 4px 0; border-bottom: 1px solid #26262b; }
+        .linha-dados { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 1rem; border-bottom: 1px solid #26262b; }
+        .linha-dados:last-child { border-bottom: none; }
+        .label-grupo { display: flex; align-items: center; gap: 8px; color: #ccc; }
+        .valor-dados { font-weight: 700; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.95rem; display: inline-block; }
+        .valor-dados.bom { background-color: rgba(40, 167, 69, 0.2); color: #2da949; }
+        .valor-dados.atencao { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .valor-dados.perigo { background-color: rgba(220, 53, 69, 0.2); color: #ea4354; }
+        #mapa { width: 100%; border-radius: 10px; border: 2px solid #26262b; margin-top: 12px; margin-bottom: 4px; flex: 1; min-height: 150px; }
     </style>
 </head>
 <body>
@@ -185,7 +36,6 @@
         <button onclick="buscarPorCidade()">Buscar</button>
     </div>
     <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
-
     <div class="abas-container" id="containerAbas">
         <button class="aba ativa" onclick="mudarAba(0)" id="aba0">Hoje</button>
         <button class="aba" onclick="mudarAba(1)" id="aba1">Amanhã</button>
@@ -193,12 +43,10 @@
         <button class="aba" onclick="mudarAba(3)" id="aba3">--</button>
         <button class="aba" onclick="mudarAba(4)" id="aba4">--</button>
     </div>
-
     <div class="painel-status" id="statusVoo">
         <span id="textoStatus">Aguardando dados...</span>
         <div class="local-texto" id="nomeLocal">Local: --</div>
     </div>
-
     <div class="tabela-clima">
         <div class="secao-titulo">Vento</div>
         <div class="linha-dados">
@@ -213,7 +61,6 @@
             <div class="label-grupo">🧭 Direção</div>
             <div class="valor-dados" id="valorDirecao">--</div>
         </div>
-
         <div class="secao-titulo">Condições</div>
         <div class="linha-dados">
             <div class="label-grupo">🌡️ Temperatura</div>
@@ -232,203 +79,10 @@
             <div class="valor-dados" id="valorNuvens">-- %</div>
         </div>
     </div>
-
     <div id="mapa"></div>
 </div>
-<script>
-    (function() {
-        var css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.href = 'https://unpkg.com';
-        document.head.appendChild(css);
-        var js = document.createElement('script');
-        js.src = 'https://unpkg.com';
-        js.onload = function() { inicializarMapa(); };
-        document.head.appendChild(js);
-    })();
 
-    const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
-    let mapa = null;
-    let marcador = null;
-    let dadosPrevisao = []; 
-    let abaAtual = 0;
-
-    function inicializarMapa(lat, lon) {
-        if (typeof L === 'undefined') return;
-        var latitude = lat || -27.5954;
-        var longitude = lon || -48.5480;
-        if (!mapa) {
-            mapa = L.map('mapa', { zoomControl: true }).setView([latitude, longitude], 14); 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(mapa);
-            marcador = L.marker([latitude, longitude]).addTo(mapa);
-        } else {
-            mapa.setView([latitude, longitude], 14);
-            marcador.setLatLng([latitude, longitude]);
-        }
-    }
-
-    async function descobrirBairroExato(lat, lon) {
-        try {
-            var urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
-            const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
-            if (!resposta.ok) return null;
-            const resultado = await resposta.json();
-            if (resultado && resultado.address) {
-                const bairro = resultado.address.suburb || resultado.address.neighbourhood || resultado.address.village || resultado.address.commercial;
-                const cidade = resultado.address.city || resultado.address.town || resultado.address.municipality;
-                if (bairro && cidade) return bairro + ', ' + cidade;
-                if (bairro) return bairro;
-            }
-            return null;
-        } catch (e) { return null; }
-    }
-
-    function processarDadosPrevisao(listaCompleta) {
-        const filtrados = [];
-        const datasVistas = [];
-        const listaComplete = listaCompleta || [];
-        listaComplete.forEach(item => {
-            const dataTexto = item.dt_txt.split(' ');
-            if (!datasVistas.includes(dataTexto)) {
-                datasVistas.push(dataTexto);
-                filtrados.push(item);
-            }
-        });
-        return filtrados.slice(0, 5);
-    }
-
-        function atualizarLabelsAbas(dadosDias) {
-        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        document.getElementById('aba0').innerText = 'Hoje';
-        document.getElementById('aba1').innerText = 'Amanhã';
-        for (let i = 2; i < 5; i++) {
-            if (dadosDias[i]) {
-                const dataObjeto = new Date(dadosDias[i].dt * 1000);
-                document.getElementById('aba' + i).innerText = diasSemana[dataObjeto.getDay()];
-            }
-        }
-    }
-
-    function mudarAba(indice) {
-        if (!dadosPrevisao[indice]) return;
-        abaAtual = indice;
-        for (let i = 0; i < 5; i++) document.getElementById('aba' + i).classList.remove('ativa');
-        document.getElementById('aba' + indice).classList.add('ativa');
-        renderizarPainelDia(dadosPrevisao[indice]);
-    }
-
-    function renderizarPainelDia(pontoClima) {
-        const ventoVelocidade = Math.round(pontoClima.wind.speed * 3.6);
-        const ventoRajada = pontoClima.wind.gust ? Math.round(pontoClima.wind.gust * 3.6) : Math.round(pontoClima.wind.speed * 1.2 * 3.6);
-        const chuvaProb = pontoClima.pop ? Math.round(pontoClima.pop * 100) : 0;
-        const temp = Math.round(pontoClima.main.temp);
-        const umidade = pontoClima.main.humidity;
-        const nuvens = pontoClima.clouds.all;
-        const graus = pontoClima.wind.deg;
-        let direcao = '↓ N';
-        if (graus > 22.5 && graus <= 67.5) direcao = '↙ NE';
-        else if (graus > 67.5 && graus <= 112.5) direcao = '← L';
-        else if (graus > 112.5 && graus <= 157.5) direcao = '↖ SE';
-        else if (graus > 157.5 && graus <= 202.5) direcao = '↑ S';
-        else if (graus > 202.5 && graus <= 247.5) direcao = '↗ SO';
-        else if (graus > 247.5 && graus <= 292.5) direcao = '→ O';
-        else if (graus > 292.5 && graus <= 337.5) direcao = '↘ NO';
-
-        document.getElementById('valorVento').innerText = ventoVelocidade + ' km/h';
-        document.getElementById('valorRajada').innerText = ventoRajada + ' km/h';
-        document.getElementById('valorDirecao').innerText = direcao;
-        document.getElementById('valorTemp').innerText = temp + ' °C';
-        document.getElementById('valorUmidade').innerText = umidade + ' %';
-        document.getElementById('valorChuva').innerText = chuvaProb + ' %';
-        document.getElementById('valorNuvens').innerText = nuvens + ' %';
-
-        const elVento = document.getElementById('valorVento');
-        const elRajada = document.getElementById('valorRajada');
-        const elChuva = document.getElementById('valorChuva');
-        const statusBox = document.getElementById('statusVoo');
-        const statusTexto = document.getElementById('textoStatus');
-
-        elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : 'bom'));
-        elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
-        elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
-
-        if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
-            statusBox.style.backgroundColor = '#dc3545';
-            statusBox.style.color = '#fff';
-            statusTexto.innerText = 'Condições desfavoráveis para voo';
-        } else if (ventoVelocidade > 15 || ventoRajada > 22 || chuvaProb > 20) {
-            statusBox.style.backgroundColor = '#ffc107';
-            statusBox.style.color = '#000';
-            statusTexto.innerText = 'Voo com cautela / atenção';
-        } else {
-            statusBox.style.backgroundColor = '#28a745';
-            statusBox.style.color = '#fff';
-            statusTexto.innerText = 'Boas condições para voo';
-        }
-    }
-
-    function inicializarInterfaceCompleta(dadosGlobais, nomeLugarCustomizado) {
-        const nomeFinal = nomeLugarCustomizado || (dadosGlobais.city.name + ', ' + dadosGlobais.city.country);
-        document.getElementById('nomeLocal').innerText = 'Local: ' + nomeFinal;
-        dadosPrevisao = processarDadosPrevisao(dadosGlobais.list);
-        atualizarLabelsAbas(dadosPrevisao);
-        mudarAba(0);
-        if (dadosGlobais.city.coord) inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
-    }
-
-    async function buscarPorCidade() {
-        const cidade = document.getElementById('campoCidade').value.trim();
-        if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
-        document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
-        try {
-            var url = 'https://openweathermap.org' + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
-            const resposta = await fetch(url);
-            if (!resposta.ok) throw new Error('Cidade não encontrada.');
-            const dados = await resposta.json(); 
-            const localExato = await descobrirBairroExato(dados.city.coord.lat, dados.city.coord.lon);
-            inicializarInterfaceCompleta(dados, localExato);
-        } catch (erro) {
-            alert(erro.message);
-            document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
-            document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
-            document.getElementById('statusVoo').style.color = '#fff';
-        }
-    }
-
-    function buscarPorGPS() {
-        if (!navigator.geolocation) return alert('Sem suporte a GPS.');
-        document.getElementById('textoStatus').innerText = '⏳ OBTENDO GPS...';
-        navigator.geolocation.getCurrentPosition(async (posicao) => {
-            try {
-                const lat = posicao.coords.latitude;
-                const lon = posicao.coords.longitude;
-                const localExato = await descobrirBairroExato(lat, lon);
-                var url = 'https://openweathermap.org' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
-                const resposta = await fetch(url);
-                const dados = await resposta.json(); 
-                inicializarInterfaceCompleta(dados, localExato);
-            } catch (erro) {
-                document.getElementById('textoStatus').innerText = '❌ ERRO NA CONSULTA';
-                document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
-                document.getElementById('statusVoo').style.color = '#fff';
-            }
-        }, () => {
-            document.getElementById('textoStatus').innerText = '⚪ AGUARDANDO DADOS (GPS RECUSADO)';
-        }, { enableHighAccuracy: true, timeout: 10000 });
-    }
-
-    if ('serviceWorker' in navigator) {
-        var blob = new Blob(['self.addEventListener("fetch", function(e){})'], {type: 'text/javascript'});
-        var urlSW = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(urlSW).catch(function(err) { console.log(err); });
-    }
-
-    window.onload = function() { 
-        inicializarMapa(); 
-        buscarPorGPS(); 
-    };
-</script>
+<!-- Conexão limpa com o arquivo de lógica externa que criaremos abaixo -->
+<script src="app.js"></script>
 </body>
 </html>
