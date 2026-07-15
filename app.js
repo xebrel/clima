@@ -1,14 +1,3 @@
-(function() {
-    var css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = 'https://unpkg.com';
-    document.head.appendChild(css);
-    var js = document.createElement('script');
-    js.src = 'https://unpkg.com';
-    js.onload = function() { inicializarMapa(); };
-    document.head.appendChild(js);
-})();
-
 const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
 let mapa = null;
 let marcador = null;
@@ -21,7 +10,7 @@ function inicializarMapa(lat, lon) {
     var longitude = lon || -48.5480;
     if (!mapa) {
         mapa = L.map('mapa', { zoomControl: true }).setView([latitude, longitude], 14); 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
         marcador = L.marker([latitude, longitude]).addTo(mapa);
     } else {
         mapa.setView([latitude, longitude], 14);
@@ -31,7 +20,8 @@ function inicializarMapa(lat, lon) {
 
 async function descobrirBairroExato(lat, lon) {
     try {
-        var urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
+        // Correção na URL do geocoding reverso do OpenStreetMap (Nominatim)
+        var urlGeo = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
         const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
         if (!resposta.ok) return null;
         const resultado = await resposta.json();
@@ -58,6 +48,7 @@ function processarDadosPrevisao(listaCompleta) {
     });
     return filtrados.slice(0, 5);
 }
+
 function atualizarLabelsAbas(dadosDias) {
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     document.getElementById('aba0').innerText = 'Hoje';
@@ -73,7 +64,9 @@ function atualizarLabelsAbas(dadosDias) {
 function mudarAba(indice) {
     if (!dadosPrevisao[indice]) return;
     abaAtual = indice;
-    for (let i = 0; i < 5; i++) document.getElementById('aba' + i).classList.remove('ativa');
+    for (let i = 0; i < 5; i++) {
+        document.getElementById('aba' + i).classList.remove('ativa');
+    }
     document.getElementById('aba' + indice).classList.add('ativa');
     renderizarPainelDia(dadosPrevisao[indice]);
 }
@@ -142,7 +135,8 @@ async function buscarPorCidade() {
     if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
     document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
     try {
-        var url = 'https://openweathermap.org' + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+        // Correção no endpoint da API de previsão (5 dias / 3 horas) do OpenWeather
+        var url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
         const resposta = await fetch(url);
         if (!resposta.ok) throw new Error('Cidade não encontrada.');
         const dados = await resposta.json(); 
@@ -164,7 +158,8 @@ function buscarPorGPS() {
             const lat = posicao.coords.latitude;
             const lon = posicao.coords.longitude;
             const localExato = await descobrirBairroExato(lat, lon);
-            var url = 'https://openweathermap.org' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+            // Correção no endpoint por Coordenadas (forecast)
+            var url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
             const resposta = await fetch(url);
             const dados = await resposta.json(); 
             inicializarInterfaceCompleta(dados, localExato);
