@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DroneWeather Pro</title>
-    
-    <!-- CSS do Mapa Leaflet via HTTPS (Obrigatório para GitHub Pages) -->
-    <link rel="stylesheet" href="https://unpkg.com" />
-    
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -120,18 +116,15 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>DroneWeather Pro</h2>
     <div class="local-info" id="nomeLocal">Local: Aguardando consulta...</div>
     <div class="status-box" id="statusVoo">⚪ AGUARDANDO DADOS</div>
-    
     <div class="busca-container">
         <input type="text" id="campoCidade" placeholder="Digite a cidade...">
         <button onclick="buscarPorCidade()">Buscar</button>
     </div>
     <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
-
     <div class="grid-clima">
         <div class="card">
             <div class="card-titulo">Vento</div>
@@ -150,135 +143,113 @@
             <div class="card-valor" id="valorTemp">-- °C</div>
         </div>
     </div>
-
     <div id="mapa"></div>
 </div>
-
-<!-- JavaScript do Mapa Leaflet via HTTPS -->
-<script src="https://unpkg.com"></script>
-
 <script>
-    // Chave pública demonstrativa do OpenWeather
-    const API_KEY = "b1b15e88fa797225412429c1c50c122a1"; 
+    (function() {
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = atob('aHR0cHM6Ly91bnBrZy5jb20vbGVhZmxldEAxLjkuNC9kaXN0L2xlYWZsZXQuY3Nz');
+        document.head.appendChild(css);
+        var js = document.createElement('script');
+        js.src = atob('aHR0cHM6Ly91bnBrZy5jb20vbGVhZmxldEAxLjkuNC9kaXN0L2xlYWZsZXQuanM=');
+        js.onload = function() { inicializarMapa(); };
+        document.head.appendChild(js);
+    })();
+
+    const API_KEY = 'b1b15e88fa797225412429c1c50c122a1'; 
     let mapa = null;
     let marcador = null;
 
-    // Inicializa o mapa centralizado em Florianópolis
-    function inicializarMapa(lat = -27.5954, lon = -48.5480) {
+    function inicializarMapa(lat, lon) {
+        if (typeof L === 'undefined') return;
+        var latitude = lat || -27.5954;
+        var longitude = lon || -48.5480;
         if (!mapa) {
-            mapa = L.map('mapa').setView([lat, lon], 12);
+            mapa = L.map('mapa').setView([latitude, longitude], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(mapa);
-            marcador = L.marker([lat, lon]).addTo(mapa);
+            marcador = L.marker([latitude, longitude]).addTo(mapa);
         } else {
-            mapa.setView([lat, lon], 12);
-            marcador.setLatLng([lat, lon]);
+            mapa.setView([latitude, longitude], 12);
+            marcador.setLatLng([latitude, longitude]);
         }
     }
 
-    // Processa os dados de resposta e alimenta o painel de voo
     function atualizarPainel(dados) {
-        if (!dados || !dados.wind || !dados.main) {
-            throw new Error("Dados meteorológicos incompletos.");
-        }
-
-        const cidade = dados.name || "Desconhecido";
-        const pais = dados.sys ? dados.sys.country : "";
+        if (!dados || !dados.wind || !dados.main) return;
+        const cidade = dados.name || 'Desconhecido';
+        const pais = dados.sys ? dados.sys.country : '';
         const ventoVelocidade = Math.round(dados.wind.speed * 3.6); 
         const ventoRajada = dados.wind.gust ? Math.round(dados.wind.gust * 3.6) : 0;
         const chuvaVolume = dados.rain && dados.rain['1h'] ? dados.rain['1h'] : 0;
         const temp = Math.round(dados.main.temp);
 
-        // Atualização da interface
-        document.getElementById('nomeLocal').innerText = `Local: ${cidade}, ${pais}`;
-        document.getElementById('valorVento').innerText = `${ventoVelocidade} km/h`;
-        document.getElementById('valorRajada').innerText = `${ventoRajada} km/h`;
-        document.getElementById('valorChuva').innerText = `${chuvaVolume} mm`;
-        document.getElementById('valorTemp').innerText = `${temp} °C`;
+        document.getElementById('nomeLocal').innerText = 'Local: ' + cidade + ', ' + pais;
+        document.getElementById('valorVento').innerText = ventoVelocidade + ' km/h';
+        document.getElementById('valorRajada').innerText = ventoRajada + ' km/h';
+        document.getElementById('valorChuva').innerText = chuvaVolume + ' mm';
+        document.getElementById('valorTemp').innerText = temp + ' °C';
 
         const statusBox = document.getElementById('statusVoo');
-        
-        // Regras lógicas para a liberação de voo de drones
         if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaVolume > 0) {
-            statusBox.innerText = "🔴 VOO PROIBIDO / PERIGOSO";
-            statusBox.style.backgroundColor = "#dc3545";
-            statusBox.style.color = "#fff";
+            statusBox.innerText = '🔴 VOO PROIBIDO / PERIGOSO';
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
         } else if (ventoVelocidade > 15 || ventoRajada > 22) {
-            statusBox.innerText = "🟡 VOO COM CAUTELA / ATENÇÃO";
-            statusBox.style.backgroundColor = "#ffc107";
-            statusBox.style.color = "#000";
+            statusBox.innerText = '🟡 VOO COM CAUTELA / ATENÇÃO';
+            statusBox.style.backgroundColor = '#ffc107';
+            statusBox.style.color = '#000';
         } else {
-            statusBox.innerText = "🟢 VOO LIBERADO";
-            statusBox.style.backgroundColor = "#28a745";
-            statusBox.style.color = "#fff";
+            statusBox.innerText = '🟢 VOO LIBERADO';
+            statusBox.style.backgroundColor = '#28a745';
+            statusBox.style.color = '#fff';
         }
-
-        if (dados.coord && dados.coord.lat && dados.coord.lon) {
-            inicializarMapa(dados.coord.lat, dados.coord.lon);
-        }
+        if (dados.coord) inicializarMapa(dados.coord.lat, dados.coord.lon);
     }
 
-    // Consulta enviando o nome da cidade digitado
     async function buscarPorCidade() {
         const cidade = document.getElementById('campoCidade').value.trim();
-        if (!cidade) return alert("Por favor, digite o nome de uma cidade.");
-
+        if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
         const statusBox = document.getElementById('statusVoo');
-        statusBox.innerText = "⏳ BUSCANDO DADOS...";
-        statusBox.style.backgroundColor = "#555";
-        statusBox.style.color = "#fff";
-
+        statusBox.innerText = '⏳ BUSCANDO DADOS...';
         try {
-            const url = `https://openweathermap.org{encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
+            var apiBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L3dlYXRoZXI/cT0=');
+            const url = apiBase + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
             const resposta = await fetch(url);
-            
-            if (!resposta.ok) {
-                if (resposta.status === 404) throw new Error("Cidade não encontrada no mapa.");
-                throw new Error("Erro na comunicação com o servidor de clima.");
-            }
-            
+            if (!resposta.ok) throw new Error('Cidade não encontrada.');
             const dados = await resposta.json(); 
             atualizarPainel(dados);
         } catch (erro) {
             alert(erro.message);
-            statusBox.innerText = "❌ ERRO NA CONSULTA";
-            statusBox.style.backgroundColor = "#dc3545";
+            statusBox.innerText = '❌ ERRO NA CONSULTA';
+            statusBox.style.backgroundColor = '#dc3545';
         }
     }
 
-    // Consulta usando a Geolocalização nativa do dispositivo
     function buscarPorGPS() {
-        if (!navigator.geolocation) return alert("Seu navegador não suporta Geolocalização.");
-
+        if (!navigator.geolocation) return alert('Sem suporte a GPS.');
         const statusBox = document.getElementById('statusVoo');
-        statusBox.innerText = "⏳ OBTENDO GPS...";
-
+        statusBox.innerText = '⏳ OBTENDO GPS...';
         navigator.geolocation.getCurrentPosition(async (posicao) => {
-            const lat = posicao.coords.latitude;
-            const lon = posicao.coords.longitude;
             try {
-                const url = `https://openweathermap.org{lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
+                var apiGpsBase = atob('aHR0cHM6Ly9hcGkub3BlbndlYXRoZXJtYXAub3JnL2RhdGEvMi41L3dlYXRoZXI/bGF0PQ==');
+                const url = apiGpsBase + posicao.coords.latitude + '&lon=' + posicao.coords.longitude + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
                 const resposta = await fetch(url);
-                
-                if (!resposta.ok) throw new Error("Não foi possível carregar as coordenadas atuais.");
-                
                 const dados = await resposta.json(); 
                 atualizarPainel(dados);
             } catch (erro) {
-                alert(erro.message);
-                statusBox.innerText = "❌ ERRO NA CONSULTA";
-                statusBox.style.backgroundColor = "#dc3545";
+                statusBox.innerText = '❌ ERRO NA CONSULTA';
+                statusBox.style.backgroundColor = '#dc3545';
             }
         }, () => {
-            alert("Acesso ao GPS recusado pelo usuário.");
-            statusBox.innerText = "⚪ AGUARDANDO DADOS";
-            statusBox.style.backgroundColor = "#555";
+            alert('GPS Recusado.');
+            statusBox.innerText = '⚪ AGUARDANDO DADOS';
         });
     }
 
-    window.onload = () => inicializarMapa();
+    window.onload = function() { inicializarMapa(); };
 </script>
-
 </body>
 </html>
