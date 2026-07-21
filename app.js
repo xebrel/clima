@@ -1,14 +1,3 @@
-(function() {
-    var css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = 'https://unpkg.com';
-    document.head.appendChild(css);
-    var js = document.createElement('script');
-    js.src = 'https://unpkg.com';
-    js.onload = function() { inicializarMapa(); };
-    document.head.appendChild(js);
-})();
-
 const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
 let mapa = null;
 let marcador = null;
@@ -31,7 +20,7 @@ function inicializarMapa(lat, lon) {
 
 async function descobrirBairroExato(lat, lon) {
     try {
-        var urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
+        var urlGeo = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
         const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
         if (!resposta.ok) return null;
         const resultado = await resposta.json();
@@ -45,38 +34,38 @@ async function descobrirBairroExato(lat, lon) {
     } catch (e) { return null; }
 }
 
-// CORREÇÃO CRÍTICA: Filtra a lista da API agrupando estritamente uma única leitura por dia real
 function processarDadosPrevisao(listaCompleta) {
     const filtrados = [];
     const datasVistas = [];
     const listaComplete = listaCompleta || [];
-    
     listaComplete.forEach(item => {
-        // Extrai apenas a string da data (AAAA-MM-DD), ignorando o horário
         const dataTexto = item.dt_txt.split(' ')[0];
-        
-        // Se ainda não salvamos nenhuma medição para este dia específico, adiciona na lista
         if (!datasVistas.includes(dataTexto)) {
             datasVistas.push(dataTexto);
             filtrados.push(item);
         }
     });
-    // Garante o retorno de exatamente 5 dias distintos para as 5 abas
     return filtrados.slice(0, 5);
 }
 
 function atualizarLabelsAbas(dadosDias) {
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    document.getElementById('aba0').innerText = 'Hoje';
-    document.getElementById('aba1').innerText = 'Amanhã';
     
-    // Atualiza dinamicamente os nomes dos próximos 3 dias com base nos dados reais recebidos
+    const elAba0 = document.getElementById('aba0');
+    const elAba1 = document.getElementById('aba1');
+    if (elAba0) elAba0.innerText = 'Hoje';
+    if (elAba1) elAba1.innerText = 'Amanhã';
+
     for (let i = 2; i < 5; i++) {
-        if (dadosDias[i]) {
-            // Corrige o fuso horário substituindo os hífens por barras antes de gerar o objeto Date
-            const stringData = dadosDias[i].dt_txt.replace(/-/g, '/');
-            const dataObjeto = new Date(stringData);
-            document.getElementById('aba' + i).innerText = diasSemana[dataObjeto.getDay()];
+        if (dadosDias[i] && dadosDias[i].dt_txt) {
+            // Extrai 'YYYY-MM-DD' e força a interpretação no fuso horário local
+            const dataTexto = dadosDias[i].dt_txt.split(' ')[0]; 
+            const dataObjeto = new Date(`${dataTexto}T00:00:00`); 
+            
+            const elementoAba = document.getElementById('aba' + i);
+            if (elementoAba) {
+                elementoAba.innerText = diasSemana[dataObjeto.getDay()];
+            }
         }
     }
 }
@@ -85,9 +74,12 @@ function mudarAba(indice) {
     if (!dadosPrevisao[indice]) return;
     abaAtual = indice;
     for (let i = 0; i < 5; i++) {
-        document.getElementById('aba' + i).classList.remove('ativa');
+        const elAba = document.getElementById('aba' + i);
+        if (elAba) elAba.classList.remove('ativa');
     }
-    document.getElementById('aba' + indice).classList.add('ativa');
+    const abaSelecionada = document.getElementById('aba' + indice);
+    if (abaSelecionada) abaSelecionada.classList.add('ativa');
+    
     renderizarPainelDia(dadosPrevisao[indice]);
 }
 
@@ -155,7 +147,7 @@ async function buscarPorCidade() {
     if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
     document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
     try {
-        var url = 'https://openweathermap.org' + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+        var url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
         const resposta = await fetch(url);
         if (!resposta.ok) throw new Error('Cidade não encontrada.');
         const dados = await resposta.json(); 
@@ -177,7 +169,7 @@ function buscarPorGPS() {
             const lat = posicao.coords.latitude;
             const lon = posicao.coords.longitude;
             const localExato = await descobrirBairroExato(lat, lon);
-            var url = 'https://openweathermap.org' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
+            var url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
             const resposta = await fetch(url);
             const dados = await resposta.json(); 
             inicializarInterfaceCompleta(dados, localExato);
@@ -192,9 +184,13 @@ function buscarPorGPS() {
 }
 
 if ('serviceWorker' in navigator) {
-    var blob = new Blob(['self.addEventListener("fetch", function(e){})'], {type: 'text/javascript'});
-    var urlSW = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(urlSW).catch(function(err) { console.log(err); });
+    navigator.serviceWorker.register('sw.js')
+        .then(function(reg) {
+            console.log('Service Worker registrado com sucesso para o escopo:', reg.scope);
+        })
+        .catch(function(err) {
+            console.warn('Erro ao registrar o Service Worker:', err);
+        });
 }
 
 window.onload = function() { 
