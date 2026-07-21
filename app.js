@@ -1,3 +1,14 @@
+(function() {
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com';
+    document.head.appendChild(css);
+    var js = document.createElement('script');
+    js.src = 'https://unpkg.com';
+    js.onload = function() { inicializarMapa(); };
+    document.head.appendChild(js);
+})();
+
 const API_KEY = '87a13cf2373f492ad3f28c6961c75223'; 
 let mapa = null;
 let marcador = null;
@@ -20,8 +31,7 @@ function inicializarMapa(lat, lon) {
 
 async function descobrirBairroExato(lat, lon) {
     try {
-        // Correção na URL do geocoding reverso do OpenStreetMap (Nominatim)
-        var urlGeo = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+        var urlGeo = 'https://openstreetmap.org' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
         const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
         if (!resposta.ok) return null;
         const resultado = await resposta.json();
@@ -35,17 +45,23 @@ async function descobrirBairroExato(lat, lon) {
     } catch (e) { return null; }
 }
 
+// CORREÇÃO CRÍTICA: Filtra a lista da API agrupando estritamente uma única leitura por dia real
 function processarDadosPrevisao(listaCompleta) {
     const filtrados = [];
     const datasVistas = [];
     const listaComplete = listaCompleta || [];
+    
     listaComplete.forEach(item => {
+        // Extrai apenas a string da data (AAAA-MM-DD), ignorando o horário
         const dataTexto = item.dt_txt.split(' ')[0];
+        
+        // Se ainda não salvamos nenhuma medição para este dia específico, adiciona na lista
         if (!datasVistas.includes(dataTexto)) {
             datasVistas.push(dataTexto);
             filtrados.push(item);
         }
     });
+    // Garante o retorno de exatamente 5 dias distintos para as 5 abas
     return filtrados.slice(0, 5);
 }
 
@@ -53,9 +69,13 @@ function atualizarLabelsAbas(dadosDias) {
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     document.getElementById('aba0').innerText = 'Hoje';
     document.getElementById('aba1').innerText = 'Amanhã';
+    
+    // Atualiza dinamicamente os nomes dos próximos 3 dias com base nos dados reais recebidos
     for (let i = 2; i < 5; i++) {
         if (dadosDias[i]) {
-            const dataObjeto = new Date(dadosDias[i].dt * 1000);
+            // Corrige o fuso horário substituindo os hífens por barras antes de gerar o objeto Date
+            const stringData = dadosDias[i].dt_txt.replace(/-/g, '/');
+            const dataObjeto = new Date(stringData);
             document.getElementById('aba' + i).innerText = diasSemana[dataObjeto.getDay()];
         }
     }
@@ -135,8 +155,7 @@ async function buscarPorCidade() {
     if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
     document.getElementById('textoStatus').innerText = '⏳ BUSCANDO PREVISÃO...';
     try {
-        // Correção no endpoint da API de previsão (5 dias / 3 horas) do OpenWeather
-        var url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${API_KEY}&units=metric&lang=pt_br`;
+        var url = 'https://openweathermap.org' + encodeURIComponent(cidade) + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
         const resposta = await fetch(url);
         if (!resposta.ok) throw new Error('Cidade não encontrada.');
         const dados = await resposta.json(); 
@@ -158,8 +177,7 @@ function buscarPorGPS() {
             const lat = posicao.coords.latitude;
             const lon = posicao.coords.longitude;
             const localExato = await descobrirBairroExato(lat, lon);
-            // Correção no endpoint por Coordenadas (forecast)
-            var url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=pt_br`;
+            var url = 'https://openweathermap.org' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&units=metric&lang=pt_br';
             const resposta = await fetch(url);
             const dados = await resposta.json(); 
             inicializarInterfaceCompleta(dados, localExato);
@@ -173,15 +191,10 @@ function buscarPorGPS() {
     }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
-// ADICIONE ESTE NO LUGAR:
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-        .then(function(reg) {
-            console.log('Service Worker registrado com sucesso para o escopo:', reg.scope);
-        })
-        .catch(function(err) {
-            console.warn('Erro ao registrar o Service Worker:', err);
-        });
+    var blob = new Blob(['self.addEventListener("fetch", function(e){})'], {type: 'text/javascript'});
+    var urlSW = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(urlSW).catch(function(err) { console.log(err); });
 }
 
 window.onload = function() { 
