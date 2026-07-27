@@ -3,6 +3,7 @@ let mapa = null;
 let marcador = null;
 let dadosPrevisao = []; 
 let abaAtual = 0;
+let fusoHorarioSegundos = 0; // Fuso da cidade em segundos em relação ao UTC
 
 function inicializarMapa(lat, lon) {
     if (typeof L === 'undefined') return;
@@ -34,21 +35,35 @@ async function descobrirBairroExato(lat, lon) {
     } catch (e) { return null; }
 }
 
-function processarDadosPrevisao(listaCompleta) {
+// Converte o timestamp UTC (item.dt) para a data YYYY-MM-DD considerando o fuso local da cidade
+function obterDataLocalCidade(dtTimestamp, offsetSegundos) {
+    // Aplica o deslocamento do fuso horário da cidade
+    const dataLocal = new Date((dtTimestamp + offsetSegundos) * 1000);
+    // Retorna string YYYY-MM-DD no tempo UTC ajustado
+    const ano = dataLocal.getUTCFullYear();
+    const mes = String(dataLocal.getUTCMonth() + 1).padStart(2, '0');
+    const dia = String(dataLocal.getUTCDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+}
+
+function processarDadosPrevisao(listaCompleta, offsetSegundos) {
     const filtrados = [];
     const datasVistas = [];
-    const listaComplete = listaCompleta || [];
-    listaComplete.forEach(item => {
-        const dataTexto = item.dt_txt.split(' ')[0];
-        if (!datasVistas.includes(dataTexto)) {
-            datasVistas.push(dataTexto);
+    const lista = listaCompleta || [];
+
+    lista.forEach(item => {
+        // Obtém a data ajustada ao fuso local da localização pesquisada
+        const dataLocal = obterDataLocalCidade(item.dt, offsetSegundos);
+        if (!datasVistas.includes(dataLocal)) {
+            datasVistas.push(dataLocal);
             filtrados.push(item);
         }
     });
+
     return filtrados.slice(0, 5);
 }
 
-function atualizarLabelsAbas(dadosDias) {
+function atualizarLabelsAbas(dadosDias, offsetSegundos) {
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     
     const elAba0 = document.getElementById('aba0');
@@ -57,14 +72,14 @@ function atualizarLabelsAbas(dadosDias) {
     if (elAba1) elAba1.innerText = 'Amanhã';
 
     for (let i = 2; i < 5; i++) {
-        if (dadosDias[i] && dadosDias[i].dt_txt) {
-            // Extrai 'YYYY-MM-DD' e força a interpretação no fuso horário local
-            const dataTexto = dadosDias[i].dt_txt.split(' ')[0]; 
-            const dataObjeto = new Date(`${dataTexto}T00:00:00`); 
+        if (dadosDias[i]) {
+            // Calcula o dia da semana considerando o fuso do local
+            const dataLocal = new Date((dadosDias[i].dt + offsetSegundos) * 1000);
+            const diaSemanaIndice = dataLocal.getUTCDay(); 
             
             const elementoAba = document.getElementById('aba' + i);
             if (elementoAba) {
-                elementoAba.innerText = diasSemana[dataObjeto.getDay()];
+                elementoAba.innerText = diasSemana[diaSemanaIndice];
             }
         }
     }
@@ -136,8 +151,12 @@ function renderizarPainelDia(pontoClima) {
 function inicializarInterfaceCompleta(dadosGlobais, nomeLugarCustomizado) {
     const nomeFinal = nomeLugarCustomizado || (dadosGlobais.city.name + ', ' + dadosGlobais.city.country);
     document.getElementById('nomeLocal').innerText = 'Local: ' + nomeFinal;
-    dadosPrevisao = processarDadosPrevisao(dadosGlobais.list);
-    atualizarLabelsAbas(dadosPrevisao);
+    
+    // Armazena o deslocamento do fuso horário retornado pela API da cidade
+    fusoHorarioSegundos = dadosGlobais.city.timezone || 0;
+
+    dadosPrevisao = processarDadosPrevisao(dadosGlobais.list, fusoHorarioSegundos);
+    atualizarLabelsAbas(dadosPrevisao, fusoHorarioSegundos);
     mudarAba(0);
     if (dadosGlobais.city.coord) inicializarMapa(dadosGlobais.city.coord.lat, dadosGlobais.city.coord.lon);
 }
