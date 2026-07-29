@@ -3,7 +3,7 @@ let mapa = null;
 let marcador = null;
 let dadosPrevisao = []; 
 let abaAtual = 0;
-let fusoHorarioSegundos = 0; // Fuso da cidade em segundos em relação ao UTC
+let fusoHorarioSegundos = 0;
 
 function inicializarMapa(lat, lon) {
     if (typeof L === 'undefined') return;
@@ -35,11 +35,8 @@ async function descobrirBairroExato(lat, lon) {
     } catch (e) { return null; }
 }
 
-// Converte o timestamp UTC (item.dt) para a data YYYY-MM-DD considerando o fuso local da cidade
 function obterDataLocalCidade(dtTimestamp, offsetSegundos) {
-    // Aplica o deslocamento do fuso horário da cidade
     const dataLocal = new Date((dtTimestamp + offsetSegundos) * 1000);
-    // Retorna string YYYY-MM-DD no tempo UTC ajustado
     const ano = dataLocal.getUTCFullYear();
     const mes = String(dataLocal.getUTCMonth() + 1).padStart(2, '0');
     const dia = String(dataLocal.getUTCDate()).padStart(2, '0');
@@ -52,7 +49,6 @@ function processarDadosPrevisao(listaCompleta, offsetSegundos) {
     const lista = listaCompleta || [];
 
     lista.forEach(item => {
-        // Obtém a data ajustada ao fuso local da localização pesquisada
         const dataLocal = obterDataLocalCidade(item.dt, offsetSegundos);
         if (!datasVistas.includes(dataLocal)) {
             datasVistas.push(dataLocal);
@@ -73,7 +69,6 @@ function atualizarLabelsAbas(dadosDias, offsetSegundos) {
 
     for (let i = 2; i < 5; i++) {
         if (dadosDias[i]) {
-            // Calcula o dia da semana considerando o fuso do local
             const dataLocal = new Date((dadosDias[i].dt + offsetSegundos) * 1000);
             const diaSemanaIndice = dataLocal.getUTCDay(); 
             
@@ -106,6 +101,15 @@ function renderizarPainelDia(pontoClima) {
     const umidade = pontoClima.main.humidity;
     const nuvens = pontoClima.clouds.all;
     const graus = pontoClima.wind.deg;
+
+    // Identificação do Clima e Verificação de Chuva
+    const climaInfo = (pontoClima.weather && pontoClima.weather[0]) ? pontoClima.weather[0] : { main: '', description: '' };
+    const condicaoClima = climaInfo.description ? (climaInfo.description.charAt(0).toUpperCase() + climaInfo.description.slice(1)) : 'N/A';
+    const categoriaClima = climaInfo.main.toLowerCase();
+
+    // Identifica se há chuva acontecendo no período (Rain, Drizzle ou Thunderstorm)
+    const estaChovendo = categoriaClima.includes('rain') || categoriaClima.includes('drizzle') || categoriaClima.includes('thunderstorm');
+
     let direcao = '↓ N';
     if (graus > 22.5 && graus <= 67.5) direcao = '↙ NE';
     else if (graus > 67.5 && graus <= 112.5) direcao = '← L';
@@ -123,6 +127,12 @@ function renderizarPainelDia(pontoClima) {
     document.getElementById('valorChuva').innerText = chuvaProb + ' %';
     document.getElementById('valorNuvens').innerText = nuvens + ' %';
 
+    // Se você tiver um elemento no HTML para exibir o estado do tempo (ex: "Chuva leve"):
+    const elCondicao = document.getElementById('valorCondicao');
+    if (elCondicao) {
+        elCondicao.innerText = condicaoClima;
+    }
+
     const elVento = document.getElementById('valorVento');
     const elRajada = document.getElementById('valorRajada');
     const elChuva = document.getElementById('valorChuva');
@@ -131,12 +141,17 @@ function renderizarPainelDia(pontoClima) {
 
     elVento.className = 'valor-dados ' + (ventoVelocidade > 25 ? 'perigo' : (ventoVelocidade > 15 ? 'atencao' : 'bom'));
     elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
-    elChuva.className = 'valor-dados ' + (chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
+    elChuva.className = 'valor-dados ' + (estaChovendo || chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
 
-    if (ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
+    // Regra de segurança para o Alerta de Voo
+    if (estaChovendo || ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
         statusBox.style.backgroundColor = '#dc3545';
         statusBox.style.color = '#fff';
-        statusTexto.innerText = 'Condições desfavoráveis para voo';
+        if (estaChovendo) {
+            statusTexto.innerText = `Condições desfavoráveis: ${condicaoClima}`;
+        } else {
+            statusTexto.innerText = 'Condições desfavoráveis para voo';
+        }
     } else if (ventoVelocidade > 15 || ventoRajada > 22 || chuvaProb > 20) {
         statusBox.style.backgroundColor = '#ffc107';
         statusBox.style.color = '#000';
@@ -152,7 +167,6 @@ function inicializarInterfaceCompleta(dadosGlobais, nomeLugarCustomizado) {
     const nomeFinal = nomeLugarCustomizado || (dadosGlobais.city.name + ', ' + dadosGlobais.city.country);
     document.getElementById('nomeLocal').innerText = 'Local: ' + nomeFinal;
     
-    // Armazena o deslocamento do fuso horário retornado pela API da cidade
     fusoHorarioSegundos = dadosGlobais.city.timezone || 0;
 
     dadosPrevisao = processarDadosPrevisao(dadosGlobais.list, fusoHorarioSegundos);
