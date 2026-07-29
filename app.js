@@ -102,12 +102,12 @@ function renderizarPainelDia(pontoClima) {
     const nuvens = pontoClima.clouds.all;
     const graus = pontoClima.wind.deg;
 
-    // Identificação do Clima e Verificação de Chuva
+    // Leitura da condição meteorológica do momento (ex: Chuva leve, Garoa, Céu limpo)
     const climaInfo = (pontoClima.weather && pontoClima.weather[0]) ? pontoClima.weather[0] : { main: '', description: '' };
     const condicaoClima = climaInfo.description ? (climaInfo.description.charAt(0).toUpperCase() + climaInfo.description.slice(1)) : 'N/A';
     const categoriaClima = climaInfo.main.toLowerCase();
 
-    // Identifica se há chuva acontecendo no período (Rain, Drizzle ou Thunderstorm)
+    // Identifica chuva real no período (Rain, Drizzle, Thunderstorm)
     const estaChovendo = categoriaClima.includes('rain') || categoriaClima.includes('drizzle') || categoriaClima.includes('thunderstorm');
 
     let direcao = '↓ N';
@@ -127,7 +127,6 @@ function renderizarPainelDia(pontoClima) {
     document.getElementById('valorChuva').innerText = chuvaProb + ' %';
     document.getElementById('valorNuvens').innerText = nuvens + ' %';
 
-    // Se você tiver um elemento no HTML para exibir o estado do tempo (ex: "Chuva leve"):
     const elCondicao = document.getElementById('valorCondicao');
     if (elCondicao) {
         elCondicao.innerText = condicaoClima;
@@ -143,7 +142,7 @@ function renderizarPainelDia(pontoClima) {
     elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
     elChuva.className = 'valor-dados ' + (estaChovendo || chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
 
-    // Regra de segurança para o Alerta de Voo
+    // Alerta do status de voo (Chuva de qualquer tipo gera alerta vermelho imediato)
     if (estaChovendo || ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
         statusBox.style.backgroundColor = '#dc3545';
         statusBox.style.color = '#fff';
