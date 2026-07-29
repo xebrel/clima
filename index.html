@@ -2,94 +2,248 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="referrer" content="no-referrer-when-downgrade">
-    <title>DroneWeather Pro</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="icone.png">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão para Voo</title>
+    <!-- Leaflet CSS (Mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <style>
-        html, body { height: 100%; margin: 0; padding: 0; background-color: #121214; overflow: hidden; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; color: #fff; display: flex; justify-content: center; align-items: stretch; }
-        .container { width: 100%; max-width: 450px; height: 100%; background-color: #1a1a1e; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; }
-        .busca-container { display: flex; gap: 8px; margin-bottom: 8px; flex-shrink: 0; }
-        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background-color: #26262b; color: #fff; font-size: 1.05rem; box-sizing: border-box; }
-        button { background-color: #00adb5; color: #fff; border: none; padding: 12px 16px; font-size: 1rem; font-weight: 700; border-radius: 8px; cursor: pointer; }
-        .btn-gps { background-color: #28a745; width: 100%; margin-bottom: 12px; padding: 12px; color: #fff; border: none; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 1rem; flex-shrink: 0; }
-        .abas-container { display: flex; background-color: #26262b; border-radius: 8px 8px 0 0; overflow: hidden; border-bottom: 2px solid #333; gap: 2px; flex-shrink: 0; }
-        .aba { flex: 1; padding: 14px 2px; text-align: center; font-size: 0.85rem; font-weight: 700; color: #888; cursor: pointer; background: none; border: none; transition: all 0.2s; white-space: nowrap; }
-        .aba.ativa { color: #fff; background-color: #1a1a1e; border-bottom: 3px solid #28a745; }
-        .painel-status { background-color: #28a745; color: #fff; text-align: center; padding: 12px; font-weight: 700; font-size: 1.1rem; transition: background 0.3s; border-radius: 8px; margin-top: 6px; flex-shrink: 0; }
-        .local-texto { font-size: 0.85rem; font-weight: 400; opacity: 0.9; margin-top: 3px; }
-        .tabela-clima { background-color: #1a1a1e; border-radius: 0 0 8px 8px; padding: 4px 10px; border: 1px solid #26262b; margin-top: 6px; flex-shrink: 0; }
-        .secao-titulo { font-size: 0.85rem; font-weight: 700; color: #00adb5; text-transform: uppercase; padding: 8px 0 4px 0; border-bottom: 1px solid #26262b; }
-        .linha-dados { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 1rem; border-bottom: 1px solid #26262b; }
-        .linha-dados:last-child { border-bottom: none; }
-        .label-grupo { display: flex; align-items: center; gap: 8px; color: #ccc; }
-        .valor-dados { font-weight: 700; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.95rem; display: inline-block; }
-        .valor-dados.bom { background-color: rgba(40, 167, 69, 0.2); color: #2da949; }
-        .valor-dados.atencao { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
-        .valor-dados.perigo { background-color: rgba(220, 53, 69, 0.2); color: #ea4354; }
-        #mapa { width: 100%; border-radius: 10px; border: 2px solid #26262b; margin-top: 12px; margin-bottom: 4px; flex: 1; min-height: 150px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Busca */
+        .busca-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .busca-container input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #29292e;
+            background-color: #202024;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .busca-container button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #01a299;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-gps {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2e7d32;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Abas */
+        .abas-container {
+            display: flex;
+            justify-content: space-between;
+            background-color: #202024;
+            padding: 4px;
+            border-radius: 6px;
+            gap: 4px;
+        }
+
+        .aba-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            color: #8d8d99;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .aba-btn.ativa {
+            background-color: #121214;
+            color: #fff;
+            border-bottom: 2px solid #00b37e;
+        }
+
+        /* Status de Voo */
+        .status-box {
+            padding: 14px;
+            border-radius: 6px;
+            text-align: center;
+            background-color: #28a745;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .status-box h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .status-box p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Seções de Dados */
+        .secao-titulo {
+            font-size: 12px;
+            color: #00b37e;
+            font-weight: bold;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-dados {
+            background-color: #202024;
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-dado {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .item-dado span:first-child {
+            color: #c4c4cc;
+        }
+
+        .valor-dados {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background-color: #29292e;
+        }
+
+        .valor-dados.bom { color: #00b37e; }
+        .valor-dados.atencao { color: #ffc107; }
+        .valor-dados.perigo { color: #f75a68; }
+
+        /* Mapa */
+        #mapa {
+            height: 180px;
+            width: 100%;
+            border-radius: 6px;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="busca-container">
-        <input type="text" id="campoCidade" placeholder="Digite a cidade...">
-        <button onclick="buscarPorCidade()">Buscar</button>
-    </div>
-    <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
-    <div class="abas-container" id="containerAbas">
-        <button class="aba ativa" onclick="mudarAba(0)" id="aba0">Hoje</button>
-        <button class="aba" onclick="mudarAba(1)" id="aba1">Amanhã</button>
-        <button class="aba" onclick="mudarAba(2)" id="aba2">--</button>
-        <button class="aba" onclick="mudarAba(3)" id="aba3">--</button>
-        <button class="aba" onclick="mudarAba(4)" id="aba4">--</button>
-    </div>
-    <div class="painel-status" id="statusVoo">
-        <span id="textoStatus">Aguardando dados...</span>
-        <div class="local-texto" id="nomeLocal">Local: --</div>
-    </div>
-    <div class="tabela-clima">
-        <div class="secao-titulo">Vento</div>
-        <div class="linha-dados">
-            <div class="label-grupo">💨 Velocidade do Vento</div>
-            <div class="valor-dados" id="valorVento">-- km/h</div>
-        </div>
-        <div class="linha-dados">
-            <div class="label-grupo">🌪️ Rajada de Vento</div>
-            <div class="valor-dados" id="valorRajada">-- km/h</div>
-        </div>
-        <div class="linha-dados">
-            <div class="label-grupo">🧭 Direção</div>
-            <div class="valor-dados" id="valorDirecao">--</div>
-        </div>
-        <div class="secao-titulo">Condições</div>
-        <div class="linha-dados">
-            <div class="label-grupo">🌡️ Temperatura</div>
-            <div class="valor-dados" id="valorTemp">-- °C</div>
-        </div>
-        <div class="linha-dados">
-            <div class="label-grupo">💧 Umidade do Ar</div>
-            <div class="valor-dados" id="valorUmidade">-- %</div>
-        </div>
-        <div class="linha-dados">
-            <div class="label-grupo">🌧️ Probabilidade de Chuva</div>
-            <div class="valor-dados" id="valorChuva">-- %</div>
-        </div>
-        <div class="linha-dados">
-            <div class="label-grupo">☁️ Cobertura de Nuvens</div>
-            <div class="valor-dados" id="valorNuvens">-- %</div>
-        </div>
-    </div>
-    <div id="mapa"></div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="app.js"></script>
+    <div class="container">
+        <!-- Campo de busca por Cidade -->
+        <div class="busca-container">
+            <input type="text" id="campoCidade" placeholder="Digite a cidade...">
+            <button onclick="buscarPorCidade()">Buscar</button>
+        </div>
+
+        <!-- Botão de localização GPS -->
+        <button class="btn-gps" onclick="buscarPorGPS()">Usar Localização Atual (GPS)</button>
+
+        <!-- Abas de Dias -->
+        <div class="abas-container">
+            <button id="aba0" class="aba-btn ativa" onclick="mudarAba(0)">Hoje</button>
+            <button id="aba1" class="aba-btn" onclick="mudarAba(1)">Amanhã</button>
+            <button id="aba2" class="aba-btn" onclick="mudarAba(2)">--</button>
+            <button id="aba3" class="aba-btn" onclick="mudarAba(3)">--</button>
+            <button id="aba4" class="aba-btn" onclick="mudarAba(4)">--</button>
+        </div>
+
+        <!-- Alerta e Status de Voo -->
+        <div id="statusVoo" class="status-box">
+            <h2 id="textoStatus">Aguardando dados...</h2>
+            <p id="nomeLocal">Local: --</p>
+        </div>
+
+        <!-- Seção de Ventos -->
+        <div class="secao-titulo">VENTO</div>
+        <div class="card-dados">
+            <div class="item-dado">
+                <span>💨 Velocidade do Vento</span>
+                <span id="valorVento" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>🌪️ Rajada de Vento</span>
+                <span id="valorRajada" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>🧭 Direção</span>
+                <span id="valorDirecao" class="valor-dados">--</span>
+            </div>
+        </div>
+
+        <!-- Seção de Condições Geral -->
+        <div class="secao-titulo">CONDIÇÕES</div>
+        <div class="card-dados">
+            <div class="item-dado">
+                <span>🌤️ Condição do Tempo</span>
+                <span id="valorCondicao" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>🌡️ Temperatura</span>
+                <span id="valorTemp" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>💧 Umidade do Ar</span>
+                <span id="valorUmidade" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>🌧️ Probabilidade de Chuva</span>
+                <span id="valorChuva" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>☁️ Cobertura de Nuvens</span>
+                <span id="valorNuvens" class="valor-dados">--</span>
+            </div>
+        </div>
+
+        <!-- Mapa Leaflet -->
+        <div id="mapa"></div>
+    </div>
+
+    <!-- Script do Leaflet (Mapa) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Script principal -->
+    <script src="app.js"></script>
+
 </body>
 </html>
