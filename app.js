@@ -35,6 +35,7 @@ async function descobrirBairroExato(lat, lon) {
     } catch (e) { return null; }
 }
 
+// Converte um timestamp UTC em string YYYY-MM-DD ajustada ao fuso horário local da cidade pesquisada
 function obterDataLocalCidade(dtTimestamp, offsetSegundos) {
     const dataLocal = new Date((dtTimestamp + offsetSegundos) * 1000);
     const ano = dataLocal.getUTCFullYear();
@@ -44,19 +45,53 @@ function obterDataLocalCidade(dtTimestamp, offsetSegundos) {
 }
 
 function processarDadosPrevisao(listaCompleta, offsetSegundos) {
-    const filtrados = [];
-    const datasVistas = [];
     const lista = listaCompleta || [];
+    const resultado = [];
 
-    lista.forEach(item => {
-        const dataLocal = obterDataLocalCidade(item.dt, offsetSegundos);
-        if (!datasVistas.includes(dataLocal)) {
-            datasVistas.push(dataLocal);
-            filtrados.push(item);
+    // 1. Descobre qual é a data de HOJE no fuso exato da cidade pesquisada
+    const agoraUTC = Math.floor(Date.now() / 1000);
+    const dataHojeStr = obterDataLocalCidade(agoraUTC, offsetSegundos);
+
+    // 2. Monta em ordem matemática exata as 5 datas consecutivas (Hoje, +1 dia, +2 dias, +3 dias, +4 dias)
+    const datasDesejadas = [];
+    const baseDate = new Date(`${dataHojeStr}T00:00:00Z`);
+
+    for (let i = 0; i < 5; i++) {
+        const d = new Date(baseDate.getTime() + (i * 24 * 60 * 60 * 1000));
+        const ano = d.getUTCFullYear();
+        const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const dia = String(d.getUTCDate()).padStart(2, '0');
+        datasDesejadas.push(`${ano}-${mes}-${dia}`);
+    }
+
+    // 3. Seleciona o ponto ideal de previsão para cada um dos 5 dias
+    datasDesejadas.forEach((dataTarget, index) => {
+        const itensDoDia = lista.filter(item => {
+            return obterDataLocalCidade(item.dt, offsetSegundos) === dataTarget;
+        });
+
+        if (itensDoDia.length > 0) {
+            if (index === 0) {
+                // HOJE: Pega o bloco mais próximo do momento atual
+                resultado.push(itensDoDia[0]);
+            } else {
+                // DIAS SEGUINTES: Busca o horário diurno relevante para o voo (12h - 15h)
+                const pontoMeioDia = itensDoDia.find(item => {
+                    const horaLocal = new Date((item.dt + offsetSegundos) * 1000).getUTCHours();
+                    return horaLocal >= 12 && horaLocal <= 15;
+                });
+
+                if (pontoMeioDia) {
+                    resultado.push(pontoMeioDia);
+                } else {
+                    const indiceMeio = Math.floor(itensDoDia.length / 2);
+                    resultado.push(itensDoDia[indiceMeio]);
+                }
+            }
         }
     });
 
-    return filtrados.slice(0, 5);
+    return resultado;
 }
 
 function atualizarLabelsAbas(dadosDias, offsetSegundos) {
@@ -67,15 +102,18 @@ function atualizarLabelsAbas(dadosDias, offsetSegundos) {
     if (elAba0) elAba0.innerText = 'Hoje';
     if (elAba1) elAba1.innerText = 'Amanhã';
 
+    // Garante os rótulos de dias da semana consecutivos baseados no relógio local
+    const agoraUTC = Math.floor(Date.now() / 1000);
+    const dataHojeStr = obterDataLocalCidade(agoraUTC, offsetSegundos);
+    const baseDate = new Date(`${dataHojeStr}T00:00:00Z`);
+
     for (let i = 2; i < 5; i++) {
-        if (dadosDias[i]) {
-            const dataLocal = new Date((dadosDias[i].dt + offsetSegundos) * 1000);
-            const diaSemanaIndice = dataLocal.getUTCDay(); 
-            
-            const elementoAba = document.getElementById('aba' + i);
-            if (elementoAba) {
-                elementoAba.innerText = diasSemana[diaSemanaIndice];
-            }
+        const d = new Date(baseDate.getTime() + (i * 24 * 60 * 60 * 1000));
+        const diaSemanaIndice = d.getUTCDay();
+        
+        const elementoAba = document.getElementById('aba' + i);
+        if (elementoAba) {
+            elementoAba.innerText = diasSemana[diaSemanaIndice];
         }
     }
 }
@@ -102,12 +140,12 @@ function renderizarPainelDia(pontoClima) {
     const nuvens = pontoClima.clouds.all;
     const graus = pontoClima.wind.deg;
 
-    // Leitura da condição meteorológica do momento (ex: Chuva leve, Garoa, Céu limpo)
+    // Leitura da condição climática do momento
     const climaInfo = (pontoClima.weather && pontoClima.weather[0]) ? pontoClima.weather[0] : { main: '', description: '' };
     const condicaoClima = climaInfo.description ? (climaInfo.description.charAt(0).toUpperCase() + climaInfo.description.slice(1)) : 'N/A';
     const categoriaClima = climaInfo.main.toLowerCase();
 
-    // Identifica chuva real no período (Rain, Drizzle, Thunderstorm)
+    // Verificação se há ocorrência de chuva (Rain, Drizzle ou Thunderstorm)
     const estaChovendo = categoriaClima.includes('rain') || categoriaClima.includes('drizzle') || categoriaClima.includes('thunderstorm');
 
     let direcao = '↓ N';
@@ -142,12 +180,12 @@ function renderizarPainelDia(pontoClima) {
     elRajada.className = 'valor-dados ' + (ventoRajada > 35 ? 'perigo' : (ventoRajada > 22 ? 'atencao' : 'bom'));
     elChuva.className = 'valor-dados ' + (estaChovendo || chuvaProb > 50 ? 'perigo' : (chuvaProb > 20 ? 'atencao' : 'bom'));
 
-    // Alerta do status de voo (Chuva de qualquer tipo gera alerta vermelho imediato)
+    // Lógica do alerta de voo (Qualquer ocorrência de chuva ativa alerta de desfavorável)
     if (estaChovendo || ventoVelocidade > 25 || ventoRajada > 35 || chuvaProb > 50) {
         statusBox.style.backgroundColor = '#dc3545';
         statusBox.style.color = '#fff';
         if (estaChovendo) {
-            statusTexto.innerText = `Condições desfavoráveis: ${condicaoClima}`;
+            statusTexto.innerText = `Desfavorável para voo: ${condicaoClima}`;
         } else {
             statusTexto.innerText = 'Condições desfavoráveis para voo';
         }
