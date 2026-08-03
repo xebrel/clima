@@ -66,11 +66,18 @@ function processarDadosPrevisao(listaCompleta, offsetSegundos) {
 
     // 3. Seleciona o ponto ideal de previsão para cada um dos 5 dias
     datasDesejadas.forEach((dataTarget, index) => {
+        const elAba = document.getElementById('aba' + index);
+
         const itensDoDia = lista.filter(item => {
             return obterDataLocalCidade(item.dt, offsetSegundos) === dataTarget;
         });
 
         if (itensDoDia.length > 0) {
+            if (elAba) {
+                elAba.style.opacity = '1';
+                elAba.style.cursor = 'pointer';
+            }
+
             if (index === 0) {
                 // HOJE: Pega o bloco mais próximo do momento atual
                 resultado.push(itensDoDia[0]);
@@ -86,6 +93,21 @@ function processarDadosPrevisao(listaCompleta, offsetSegundos) {
                 } else {
                     const indiceMeio = Math.floor(itensDoDia.length / 2);
                     resultado.push(itensDoDia[indiceMeio]);
+                }
+            }
+        } else {
+            // Se for o último dia (5ª aba) e a API não tiver o bloco exato deste fuso:
+            // Pega a última previsão válida da lista para garantir o clique da aba
+            if (lista.length > 0) {
+                resultado.push(lista[lista.length - 1]);
+                if (elAba) {
+                    elAba.style.opacity = '1';
+                    elAba.style.cursor = 'pointer';
+                }
+            } else {
+                if (elAba) {
+                    elAba.style.opacity = '0.4';
+                    elAba.style.cursor = 'not-allowed';
                 }
             }
         }
