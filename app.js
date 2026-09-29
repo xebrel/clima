@@ -32,12 +32,27 @@ const WMO_CODES = {
     99: { desc: 'Tempestade severa', icon: '⛈️', chovendo: true }
 };
 
+// Função helper segura para atualizar texto sem risco de erro nulo
+function definirTexto(id, valor) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = valor;
+}
+
+// Função helper segura para atualizar classe CSS
+function definirClasse(id, classe) {
+    const el = document.getElementById(id);
+    if (el) el.className = classe;
+}
+
 function traduzirWmo(code) {
     return WMO_CODES[code] || { desc: 'Instável', icon: '⛅', chovendo: false };
 }
 
 function inicializarMapa(lat, lon) {
     if (typeof L === 'undefined') return;
+    const elMapa = document.getElementById('mapa');
+    if (!elMapa) return;
+
     const latitude = lat || -27.5954;
     const longitude = lon || -48.5480;
     if (!mapa) {
@@ -69,7 +84,6 @@ async function buscarIndiceKpSolar() {
     } catch (e) {
         console.warn('Erro ao consultar NOAA direto:', e);
     }
-    // Fallback padrão se houver bloqueio de rede
     return 1.3;
 }
 
@@ -148,30 +162,36 @@ function agruparDadosOpenMeteo(hourly) {
 function atualizarLabelsAbas(dias) {
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     
-    document.getElementById('aba0').innerText = 'Hoje';
+    definirTexto('aba0', 'Hoje');
     if (dias.length > 1) {
-        document.getElementById('aba1').innerText = 'Amanhã';
+        definirTexto('aba1', 'Amanhã');
     }
 
     for (let i = 2; i < 5; i++) {
         const elAba = document.getElementById('aba' + i);
-        if (dias[i]) {
-            const partes = dias[i].data.split('-');
-            const dataObj = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
-            elAba.innerText = diasSemana[dataObj.getDay()];
-            elAba.style.display = 'block';
-        } else if (elAba) {
-            elAba.style.display = 'none';
+        if (elAba) {
+            if (dias[i]) {
+                const partes = dias[i].data.split('-');
+                const dataObj = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+                elAba.innerText = diasSemana[dataObj.getDay()];
+                elAba.style.display = 'block';
+            } else {
+                elAba.style.display = 'none';
+            }
         }
     }
 }
 
 function mudarAltitude(alt) {
     altitudeAtual = alt;
-    document.getElementById('btnAlt10').classList.toggle('ativa', alt === 10);
-    document.getElementById('btnAlt80').classList.toggle('ativa', alt === 80);
-    document.getElementById('btnAlt120').classList.toggle('ativa', alt === 120);
-    document.getElementById('labelAltitudeVento').innerText = alt + 'm';
+    const btn10 = document.getElementById('btnAlt10');
+    const btn80 = document.getElementById('btnAlt80');
+    const btn120 = document.getElementById('btnAlt120');
+
+    if (btn10) btn10.classList.toggle('ativa', alt === 10);
+    if (btn80) btn80.classList.toggle('ativa', alt === 80);
+    if (btn120) btn120.classList.toggle('ativa', alt === 120);
+    definirTexto('labelAltitudeVento', alt + 'm');
 
     renderizarCarrosselHoras();
     renderizarPainelHoraAtual();
@@ -216,6 +236,7 @@ function mudarAba(indice) {
 
 function renderizarCarrosselHoras() {
     const container = document.getElementById('horasScroll');
+    if (!container) return;
     container.innerHTML = '';
     const diaObj = dadosPrevisaoPorDia[abaAtual];
     if (!diaObj || !diaObj.horas) return;
@@ -235,7 +256,7 @@ function renderizarCarrosselHoras() {
         card.innerHTML = `
             <div class="hora-titulo">${item.hora}</div>
             <div class="hora-clima-icon">${infoWmo.icon}</div>
-            <div class="hora-vento" style="color: ${corVento}">${Math.round(ventoEscolhido)}k</div>
+            <div class="hora-vento" style="color: ${corVento}">${Math.round(ventoEscolhido)} km/h</div>
         `;
 
         card.onclick = () => {
@@ -250,7 +271,7 @@ function renderizarCarrosselHoras() {
     });
 
     const ativaEl = container.children[horaSelecionadaIndex];
-    if (ativaEl) {
+    if (ativaEl && typeof ativaEl.scrollIntoView === 'function') {
         ativaEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
 }
@@ -304,7 +325,6 @@ function renderizarPainelHoraAtual() {
     const infoWmo = traduzirWmo(weatherCode);
     const estaChovendoAtualmente = infoWmo.chovendo || chuvaMm > 0;
 
-    // Vento exato com 1 casa decimal
     let ventoVelocidade = ponto.vento80m;
     if (altitudeAtual === 10) {
         ventoVelocidade = vento10;
@@ -315,13 +335,11 @@ function renderizarPainelHoraAtual() {
     const ventoFormatado = ventoVelocidade.toFixed(1);
     const rajadaFormatada = rajada.toFixed(1);
 
-    document.getElementById('valorVento').innerText = `${ventoFormatado} km/h`;
-    document.getElementById('valorRajada').innerText = `${rajadaFormatada} km/h`;
-    document.getElementById('valorDirecao').innerText = converterGrausParaDirecao(graus);
+    definirTexto('valorVento', `${ventoFormatado} km/h`);
+    definirTexto('valorRajada', `${rajadaFormatada} km/h`);
+    definirTexto('valorDirecao', converterGrausParaDirecao(graus));
+    definirTexto('valorCondicao', `${infoWmo.icon} ${infoWmo.desc}`);
 
-    // Condição e Chuva
-    document.getElementById('valorCondicao').innerText = `${infoWmo.icon} ${infoWmo.desc}`;
-    
     const elChuvaMm = document.getElementById('valorChuvaMm');
     if (elChuvaMm) {
         elChuvaMm.innerText = estaChovendoAtualmente ? `${chuvaMm.toFixed(1)} mm/h` : '0 mm (Sem chuva)';
@@ -329,22 +347,22 @@ function renderizarPainelHoraAtual() {
     }
 
     const elProbChuva = document.getElementById('valorChuva');
-    elProbChuva.innerText = `${probChuva}%`;
-    elProbChuva.className = 'valor-dados ' + (estaChovendoAtualmente || probChuva > 40 ? 'perigo' : (probChuva > 20 ? 'atencao' : 'bom'));
+    if (elProbChuva) {
+        elProbChuva.innerText = `${probChuva}%`;
+        elProbChuva.className = 'valor-dados ' + (estaChovendoAtualmente || probChuva > 40 ? 'perigo' : (probChuva > 20 ? 'atencao' : 'bom'));
+    }
 
-    // Temperatura, umidade e nuvens
-    document.getElementById('valorTemp').innerText = `${temp} °C`;
-    document.getElementById('valorUmidade').innerText = `${umidade} %`;
-    document.getElementById('valorNuvens').innerText = `${nuvens} %`;
+    definirTexto('valorTemp', `${temp} °C`);
+    definirTexto('valorUmidade', `${umidade} %`);
+    definirTexto('valorNuvens', `${nuvens} %`);
 
-    // Visibilidade
     const visibilidadeKm = ponto.visibilidade || 10;
     const elVisib = document.getElementById('valorVisibilidade');
-    elVisib.innerText = `${visibilidadeKm} km`;
-    elVisib.className = 'valor-dados ' + (visibilidadeKm < 3 ? 'perigo' : (visibilidadeKm < 6 ? 'atencao' : 'bom'));
+    if (elVisib) {
+        elVisib.innerText = `${visibilidadeKm} km`;
+        elVisib.className = 'valor-dados ' + (visibilidadeKm < 3 ? 'perigo' : (visibilidadeKm < 6 ? 'atencao' : 'bom'));
+    }
 
-    // Índice KP Solar
-    const elKp = document.getElementById('valorKp');
     const valorKp = (indiceKpAtual !== null) ? indiceKpAtual : 1.3;
     let labelKp = 'Seguro';
     let classeKp = 'bom';
@@ -355,43 +373,45 @@ function renderizarPainelHoraAtual() {
         labelKp = 'Atenção';
         classeKp = 'atencao';
     }
-    elKp.innerText = `KP ${valorKp.toFixed(1)} (${labelKp})`;
-    elKp.className = 'valor-dados ' + classeKp;
 
-    // Cores de criticidade de vento
-    const elVento = document.getElementById('valorVento');
-    const elRajada = document.getElementById('valorRajada');
-    elVento.className = 'valor-dados ' + (ventoVelocidade > 30 ? 'perigo' : (ventoVelocidade > 18 ? 'atencao' : 'bom'));
-    elRajada.className = 'valor-dados ' + (rajada > 38 ? 'perigo' : (rajada > 25 ? 'atencao' : 'bom'));
+    const elKp = document.getElementById('valorKp');
+    if (elKp) {
+        elKp.innerText = `KP ${valorKp.toFixed(1)} (${labelKp})`;
+        elKp.className = 'valor-dados ' + classeKp;
+    }
 
-    // Status de Voo
+    definirClasse('valorVento', 'valor-dados ' + (ventoVelocidade > 30 ? 'perigo' : (ventoVelocidade > 18 ? 'atencao' : 'bom')));
+    definirClasse('valorRajada', 'valor-dados ' + (rajada > 38 ? 'perigo' : (rajada > 25 ? 'atencao' : 'bom')));
+
     const statusBox = document.getElementById('statusVoo');
     const statusTexto = document.getElementById('textoStatus');
 
-    if (estaChovendoAtualmente) {
-        statusBox.style.backgroundColor = '#dc3545';
-        statusBox.style.color = '#fff';
-        statusTexto.innerText = `🛑 Voo Desfavorável: ${infoWmo.desc}`;
-    } else if (ventoVelocidade > 30 || rajada > 38) {
-        statusBox.style.backgroundColor = '#dc3545';
-        statusBox.style.color = '#fff';
-        statusTexto.innerText = `🛑 Vento forte (${ventoFormatado} km/h) a ${altitudeAtual}m`;
-    } else if (visibilidadeKm < 3) {
-        statusBox.style.backgroundColor = '#dc3545';
-        statusBox.style.color = '#fff';
-        statusTexto.innerText = '🛑 Baixa Visibilidade (< 3km) para VLOS';
-    } else if (valorKp >= 5) {
-        statusBox.style.backgroundColor = '#dc3545';
-        statusBox.style.color = '#fff';
-        statusTexto.innerText = '🛑 Tempestade Geomagnética (Risco GPS)';
-    } else if (ventoVelocidade > 18 || rajada > 25 || probChuva > 25 || visibilidadeKm < 6 || valorKp >= 4) {
-        statusBox.style.backgroundColor = '#ffc107';
-        statusBox.style.color = '#000';
-        statusTexto.innerText = '⚠️ Voo com Cautela / Atenção';
-    } else {
-        statusBox.style.backgroundColor = '#28a745';
-        statusBox.style.color = '#fff';
-        statusTexto.innerText = '✅ Excelentes Condições para Voo';
+    if (statusBox && statusTexto) {
+        if (estaChovendoAtualmente) {
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
+            statusTexto.innerText = `🛑 Voo Desfavorável: ${infoWmo.desc}`;
+        } else if (ventoVelocidade > 30 || rajada > 38) {
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
+            statusTexto.innerText = `🛑 Vento forte (${ventoFormatado} km/h) a ${altitudeAtual}m`;
+        } else if (visibilidadeKm < 3) {
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
+            statusTexto.innerText = '🛑 Baixa Visibilidade (< 3km) para VLOS';
+        } else if (valorKp >= 5) {
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
+            statusTexto.innerText = '🛑 Tempestade Geomagnética (Risco GPS)';
+        } else if (ventoVelocidade > 18 || rajada > 25 || probChuva > 25 || visibilidadeKm < 6 || valorKp >= 4) {
+            statusBox.style.backgroundColor = '#ffc107';
+            statusBox.style.color = '#000';
+            statusTexto.innerText = '⚠️ Voo com Cautela / Atenção';
+        } else {
+            statusBox.style.backgroundColor = '#28a745';
+            statusBox.style.color = '#fff';
+            statusTexto.innerText = '✅ Excelentes Condições para Voo';
+        }
     }
 }
 
@@ -412,7 +432,7 @@ function obterIndiceHoraMaisProxima(horas) {
 
 async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
     try {
-        document.getElementById('textoStatus').innerText = '⏳ Atualizando...';
+        definirTexto('textoStatus', '⏳ Atualizando...');
         
         const urlMeteo = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_direction_10m,wind_direction_120m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
 
@@ -429,7 +449,7 @@ async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
         }
 
         dadosPrevisaoPorDia = agruparDadosOpenMeteo(resMeteo.hourly);
-        document.getElementById('nomeLocal').innerText = 'Local: ' + nomeLocal;
+        definirTexto('nomeLocal', 'Local: ' + nomeLocal);
 
         atualizarLabelsAbas(dadosPrevisaoPorDia);
         inicializarMapa(lat, lon);
@@ -437,16 +457,20 @@ async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
 
     } catch (erro) {
         console.error(erro);
-        document.getElementById('textoStatus').innerText = '❌ Erro na consulta';
-        document.getElementById('statusVoo').style.backgroundColor = '#dc3545';
-        document.getElementById('statusVoo').style.color = '#fff';
+        definirTexto('textoStatus', '❌ Erro na consulta');
+        const statusBox = document.getElementById('statusVoo');
+        if (statusBox) {
+            statusBox.style.backgroundColor = '#dc3545';
+            statusBox.style.color = '#fff';
+        }
     }
 }
 
 async function buscarPorCidade() {
-    const cidade = document.getElementById('campoCidade').value.trim();
+    const elCampo = document.getElementById('campoCidade');
+    const cidade = elCampo ? elCampo.value.trim() : '';
     if (!cidade) return alert('Por favor, digite o nome de uma cidade.');
-    document.getElementById('textoStatus').innerText = '⏳ Localizando...';
+    definirTexto('textoStatus', '⏳ Localizando...');
 
     try {
         const urlGeo = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`;
@@ -462,13 +486,13 @@ async function buscarPorCidade() {
         await carregarPrevisaoOpenMeteo(lugar.latitude, lugar.longitude, nomeFormatado);
     } catch (e) {
         alert(e.message);
-        document.getElementById('textoStatus').innerText = '❌ Cidade não encontrada';
+        definirTexto('textoStatus', '❌ Cidade não encontrada');
     }
 }
 
 function buscarPorGPS() {
     if (!navigator.geolocation) return alert('Sem suporte a GPS.');
-    document.getElementById('textoStatus').innerText = '⏳ Obtendo GPS...';
+    definirTexto('textoStatus', '⏳ Obtendo GPS...');
 
     navigator.geolocation.getCurrentPosition(async (posicao) => {
         try {
@@ -479,7 +503,7 @@ function buscarPorGPS() {
             await carregarPrevisaoOpenMeteo(lat, lon, nomeFinal);
         } catch (erro) {
             console.error(erro);
-            document.getElementById('textoStatus').innerText = '❌ Erro ao obter local';
+            definirTexto('textoStatus', '❌ Erro ao obter local');
         }
     }, (err) => {
         console.warn('GPS negado:', err);
