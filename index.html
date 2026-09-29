@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Previsão para Voo de Drone Pro</title>
     <!-- Leaflet CSS (Mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,7 +20,7 @@
             color: #e1e1e6;
             display: flex;
             justify-content: center;
-            padding: 12px;
+            padding: 10px;
             min-height: 100vh;
         }
 
@@ -28,7 +29,7 @@
             max-width: 480px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         /* Busca */
@@ -39,14 +40,13 @@
 
         .busca-container input {
             flex: 1;
-            padding: 10px 14px;
+            padding: 12px 14px;
             border-radius: 8px;
             border: 1px solid #29292e;
             background-color: #202024;
             color: #fff;
             font-size: 14px;
             outline: none;
-            transition: border-color 0.2s;
         }
 
         .busca-container input:focus {
@@ -54,18 +54,13 @@
         }
 
         .busca-container button {
-            padding: 10px 16px;
+            padding: 12px 16px;
             border: none;
             border-radius: 8px;
             background-color: #01a299;
             color: #fff;
             font-weight: bold;
             cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .busca-container button:hover {
-            opacity: 0.9;
         }
 
         .btn-gps {
@@ -82,17 +77,12 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: opacity 0.2s;
-        }
-
-        .btn-gps:hover {
-            opacity: 0.9;
         }
 
         /* Seletor de Altitude */
         .altitude-card {
             background-color: #202024;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -122,10 +112,10 @@
             color: #8d8d99;
             font-size: 12px;
             font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .alt-btn.ativa {
@@ -154,7 +144,7 @@
             border-radius: 6px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .aba-btn.ativa {
@@ -174,35 +164,25 @@
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 6px;
-            scrollbar-width: thin;
-            scrollbar-color: #29292e #121214;
-        }
-
-        .horas-scroll::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .horas-scroll::-webkit-scrollbar-thumb {
-            background-color: #29292e;
-            border-radius: 4px;
+            padding: 4px 2px 8px 2px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .hora-card {
             flex: 0 0 auto;
             background-color: #202024;
-            padding: 8px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             text-align: center;
             cursor: pointer;
-            border: 1px solid transparent;
-            min-width: 64px;
-            transition: all 0.2s;
+            border: 1px solid #29292e;
+            min-width: 65px;
+            touch-action: manipulation;
         }
 
         .hora-card.ativa {
             border-color: #00b37e;
-            background-color: #29292e;
+            background-color: #2a2a30;
         }
 
         .hora-card .hora-titulo {
@@ -310,12 +290,12 @@
     <div class="container">
         <!-- Campo de busca por Cidade -->
         <div class="busca-container">
-            <input type="text" id="campoCidade" placeholder="Digite uma cidade (ex: São Paulo, Floripa)..." onkeydown="if(event.key==='Enter') buscarPorCidade()">
-            <button onclick="buscarPorCidade()">Buscar</button>
+            <input type="text" id="campoCidade" placeholder="Digite uma cidade (ex: Kobrasol, São José)..." onkeydown="if(event.key==='Enter') buscarPorCidade()">
+            <button type="button" onclick="buscarPorCidade()">Buscar</button>
         </div>
 
         <!-- Botão de localização GPS -->
-        <button class="btn-gps" onclick="buscarPorGPS()">
+        <button type="button" class="btn-gps" onclick="buscarPorGPS()">
             <span>📍</span> Usar Localização Atual (GPS)
         </button>
 
@@ -325,19 +305,19 @@
                 <span>🚁</span> Altitude de Voo:
             </div>
             <div class="altitude-selector">
-                <button id="btnAlt10" class="alt-btn" onclick="mudarAltitude(10)">10m (Solo)</button>
-                <button id="btnAlt80" class="alt-btn ativa" onclick="mudarAltitude(80)">80m</button>
-                <button id="btnAlt120" class="alt-btn" onclick="mudarAltitude(120)">120m (Teto)</button>
+                <button type="button" id="btnAlt10" class="alt-btn" onclick="mudarAltitude(10)">10m (Solo)</button>
+                <button type="button" id="btnAlt80" class="alt-btn ativa" onclick="mudarAltitude(80)">80m</button>
+                <button type="button" id="btnAlt120" class="alt-btn" onclick="mudarAltitude(120)">120m (Teto)</button>
             </div>
         </div>
 
         <!-- Abas de Dias (5 dias) -->
         <div class="abas-container">
-            <button id="aba0" class="aba-btn ativa" onclick="mudarAba(0)">Hoje</button>
-            <button id="aba1" class="aba-btn" onclick="mudarAba(1)">Amanhã</button>
-            <button id="aba2" class="aba-btn" onclick="mudarAba(2)">--</button>
-            <button id="aba3" class="aba-btn" onclick="mudarAba(3)">--</button>
-            <button id="aba4" class="aba-btn" onclick="mudarAba(4)">--</button>
+            <button type="button" id="aba0" class="aba-btn ativa" onclick="mudarAba(0)">Hoje</button>
+            <button type="button" id="aba1" class="aba-btn" onclick="mudarAba(1)">Amanhã</button>
+            <button type="button" id="aba2" class="aba-btn" onclick="mudarAba(2)">--</button>
+            <button type="button" id="aba3" class="aba-btn" onclick="mudarAba(3)">--</button>
+            <button type="button" id="aba4" class="aba-btn" onclick="mudarAba(4)">--</button>
         </div>
 
         <!-- Carrossel de Horas do Dia Selecionado -->
@@ -379,12 +359,16 @@
                 <span id="valorCondicao" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>🛰️ Índice Geomagnético (KP Solar)</span>
-                <span id="valorKp" class="valor-dados">--</span>
+                <span>🌧️ Chuva / Precipitação</span>
+                <span id="valorChuvaMm" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>🌧️ Probabilidade de Chuva</span>
+                <span>☔ Probabilidade de Chuva</span>
                 <span id="valorChuva" class="valor-dados">--</span>
+            </div>
+            <div class="item-dado">
+                <span>🛰️ Índice Geomagnético (KP Solar)</span>
+                <span id="valorKp" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
                 <span>👁️ Visibilidade Estimada</span>
@@ -408,7 +392,7 @@
         <div id="mapa"></div>
 
         <p class="aviso-footer">
-            Modelos de alta resolução Open-Meteo (ECMWF) + NOAA Space Weather.<br>
+            Modelos de alta resolução Open-Meteo + NOAA Space Weather.<br>
             Consulte sempre as normas DECEA/ANAC antes da decolagem.
         </p>
     </div>
