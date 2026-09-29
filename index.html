@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Previsão para Voo de Drone Pro</title>
+    <title>Previsão para Voo de Drone</title>
     <!-- Leaflet CSS (Mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -20,7 +20,7 @@
             color: #e1e1e6;
             display: flex;
             justify-content: center;
-            padding: 10px;
+            padding: 8px 10px;
             min-height: 100vh;
         }
 
@@ -29,91 +29,92 @@
             max-width: 480px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
         }
 
-        /* Busca */
-        .busca-container {
+        /* Linha Topo: Busca compacta + Botão GPS integrado */
+        .topo-barra {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            align-items: center;
         }
 
-        .busca-container input {
+        .topo-barra input {
             flex: 1;
-            padding: 12px 14px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
             border: 1px solid #29292e;
             background-color: #202024;
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
         }
 
-        .busca-container input:focus {
+        .topo-barra input:focus {
             border-color: #00b37e;
         }
 
-        .busca-container button {
-            padding: 12px 16px;
+        .btn-busca {
+            padding: 8px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: #01a299;
             color: #fff;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
         }
 
-        .btn-gps {
-            width: 100%;
-            padding: 12px;
+        .btn-gps-topo {
+            padding: 8px 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: #2e7d32;
             color: #fff;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
+            gap: 4px;
+            white-space: nowrap;
         }
 
-        /* Seletor de Altitude */
-        .altitude-card {
-            background-color: #202024;
-            padding: 8px 12px;
-            border-radius: 8px;
+        /* Seletor de Altitude Compacto */
+        .altitude-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background-color: #202024;
+            padding: 4px 8px;
+            border-radius: 6px;
         }
 
         .altitude-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            color: #c4c4cc;
+            color: #a8a8b3;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .altitude-selector {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             background-color: #121214;
-            padding: 3px;
-            border-radius: 6px;
+            padding: 2px;
+            border-radius: 5px;
         }
 
         .alt-btn {
             border: none;
             background: transparent;
             color: #8d8d99;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
             cursor: pointer;
             touch-action: manipulation;
         }
@@ -128,20 +129,20 @@
             display: flex;
             justify-content: space-between;
             background-color: #202024;
-            padding: 4px;
-            border-radius: 8px;
-            gap: 4px;
+            padding: 3px;
+            border-radius: 6px;
+            gap: 3px;
         }
 
         .aba-btn {
             flex: 1;
-            padding: 10px 0;
+            padding: 6px 0;
             border: none;
             background: transparent;
             color: #8d8d99;
             font-size: 12px;
             font-weight: bold;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             text-align: center;
             touch-action: manipulation;
@@ -153,30 +154,28 @@
             border-bottom: 2px solid #00b37e;
         }
 
-        /* Seletor Horário (Hora a Hora) */
-        .horas-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
+        /* Mini Timeline Horária */
         .horas-scroll {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             overflow-x: auto;
-            padding: 4px 2px 8px 2px;
-            -webkit-overflow-scrolling: touch;
+            padding-bottom: 3px;
+            scrollbar-width: none;
+        }
+
+        .horas-scroll::-webkit-scrollbar {
+            display: none;
         }
 
         .hora-card {
             flex: 0 0 auto;
             background-color: #202024;
-            padding: 8px 10px;
-            border-radius: 6px;
+            padding: 4px 7px;
+            border-radius: 5px;
             text-align: center;
             cursor: pointer;
             border: 1px solid #29292e;
-            min-width: 65px;
+            min-width: 54px;
             touch-action: manipulation;
         }
 
@@ -186,26 +185,25 @@
         }
 
         .hora-card .hora-titulo {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             color: #a8a8b3;
-            margin-bottom: 4px;
         }
 
         .hora-card .hora-clima-icon {
-            font-size: 16px;
-            margin-bottom: 2px;
+            font-size: 13px;
+            line-height: 1.1;
         }
 
         .hora-card .hora-vento {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
         }
 
         /* Status de Voo Principal */
         .status-box {
-            padding: 14px;
-            border-radius: 8px;
+            padding: 7px 10px;
+            border-radius: 6px;
             text-align: center;
             background-color: #28a745;
             color: #fff;
@@ -213,96 +211,85 @@
         }
 
         .status-box h2 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .status-box p {
-            font-size: 12px;
+            font-size: 11px;
             opacity: 0.95;
         }
 
-        /* Seções de Dados */
+        /* Títulos de seção ultra compactos */
         .secao-titulo {
-            font-size: 11px;
+            font-size: 10px;
             color: #00b37e;
             font-weight: bold;
-            margin-top: 4px;
-            letter-spacing: 0.8px;
+            margin-top: 1px;
+            letter-spacing: 0.6px;
             text-transform: uppercase;
         }
 
         .card-dados {
             background-color: #202024;
-            border-radius: 8px;
-            padding: 12px 14px;
+            border-radius: 6px;
+            padding: 6px 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 5px;
         }
 
         .item-dado {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .item-dado span:first-child {
             color: #c4c4cc;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .valor-dados {
             font-weight: bold;
-            padding: 3px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             background-color: #29292e;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .valor-dados.bom { color: #00b37e; }
         .valor-dados.atencao { color: #ffc107; }
         .valor-dados.perigo { color: #f75a68; }
 
-        /* Mapa */
+        /* Mapa na parte inferior */
         #mapa {
-            height: 180px;
+            height: 140px;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 6px;
             z-index: 1;
-        }
-
-        .aviso-footer {
-            text-align: center;
-            font-size: 11px;
-            color: #737380;
             margin-top: 4px;
-            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Campo de busca por Cidade -->
-        <div class="busca-container">
-            <input type="text" id="campoCidade" placeholder="Digite uma cidade (ex: Kobrasol, São José)..." onkeydown="if(event.key==='Enter') buscarPorCidade()">
-            <button type="button" onclick="buscarPorCidade()">Buscar</button>
+        <!-- Topo Unificado: Busca de cidade + Botão GPS juntos -->
+        <div class="topo-barra">
+            <input type="text" id="campoCidade" placeholder="Cidade ou bairro..." onkeydown="if(event.key==='Enter') buscarPorCidade()">
+            <button type="button" class="btn-busca" onclick="buscarPorCidade()">Buscar</button>
+            <button type="button" class="btn-gps-topo" onclick="buscarPorGPS()" title="Usar GPS Atual">📍 GPS</button>
         </div>
 
-        <!-- Botão de localização GPS -->
-        <button type="button" class="btn-gps" onclick="buscarPorGPS()">
-            <span>📍</span> Usar Localização Atual (GPS)
-        </button>
-
-        <!-- Seletor de Altitude de Voo do Drone -->
-        <div class="altitude-card">
+        <!-- Seletor de Altitude Compacto -->
+        <div class="altitude-row">
             <div class="altitude-label">
-                <span>🚁</span> Altitude de Voo:
+                <span>🚁</span> Altitude:
             </div>
             <div class="altitude-selector">
                 <button type="button" id="btnAlt10" class="alt-btn" onclick="mudarAltitude(10)">10m (Solo)</button>
@@ -320,25 +307,22 @@
             <button type="button" id="aba4" class="aba-btn" onclick="mudarAba(4)">--</button>
         </div>
 
-        <!-- Carrossel de Horas do Dia Selecionado -->
-        <div class="horas-wrapper">
-            <div class="secao-titulo">HORÁRIOS DO DIA (<span id="labelHoraSelecionada">Agora</span>)</div>
-            <div id="horasScroll" class="horas-scroll">
-                <!-- Inserido dinamicamente via JS -->
-            </div>
+        <!-- Mini Carrossel de Horários -->
+        <div id="horasScroll" class="horas-scroll">
+            <!-- Inserido dinamicamente via JS -->
         </div>
 
-        <!-- Alerta e Status de Voo -->
+        <!-- Alerta e Status de Voo Principal -->
         <div id="statusVoo" class="status-box">
             <h2 id="textoStatus">Aguardando dados...</h2>
             <p id="nomeLocal">Local: --</p>
         </div>
 
         <!-- Seção de Ventos na Altitude Escolhida -->
-        <div class="secao-titulo">VENTO & RAJADAS (<span id="labelAltitudeVento">80m</span>)</div>
+        <div class="secao-titulo">VENTO (<span id="labelAltitudeVento">80m</span>)</div>
         <div class="card-dados">
             <div class="item-dado">
-                <span>💨 Vento na Altitude</span>
+                <span>💨 Velocidade do Vento</span>
                 <span id="valorVento" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
@@ -352,26 +336,26 @@
         </div>
 
         <!-- Seção de Condições de Voo & Drone -->
-        <div class="secao-titulo">SEGURANÇA & ATMOSFERA</div>
+        <div class="secao-titulo">CONDIÇÕES & SEGURANÇA</div>
         <div class="card-dados">
             <div class="item-dado">
-                <span>🌤️ Condição do Tempo</span>
+                <span>🌤️ Tempo</span>
                 <span id="valorCondicao" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>🌧️ Chuva / Precipitação</span>
+                <span>🌧️ Chuva</span>
                 <span id="valorChuvaMm" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>☔ Probabilidade de Chuva</span>
+                <span>☔ Probabilidade</span>
                 <span id="valorChuva" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>🛰️ Índice Geomagnético (KP Solar)</span>
+                <span>🛰️ Índice KP Solar</span>
                 <span id="valorKp" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>👁️ Visibilidade Estimada</span>
+                <span>👁️ Visibilidade</span>
                 <span id="valorVisibilidade" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
@@ -379,22 +363,17 @@
                 <span id="valorTemp" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>💧 Umidade do Ar</span>
+                <span>💧 Umidade</span>
                 <span id="valorUmidade" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
-                <span>☁️ Cobertura de Nuvens</span>
+                <span>☁️ Nuvens</span>
                 <span id="valorNuvens" class="valor-dados">--</span>
             </div>
         </div>
 
-        <!-- Mapa Leaflet -->
+        <!-- Mapa Leaflet na parte inferior da rolagem -->
         <div id="mapa"></div>
-
-        <p class="aviso-footer">
-            Modelos de alta resolução Open-Meteo + NOAA Space Weather.<br>
-            Consulte sempre as normas DECEA/ANAC antes da decolagem.
-        </p>
     </div>
 
     <!-- Script do Leaflet (Mapa) -->
