@@ -150,9 +150,22 @@ async function descobrirBairroExato(lat, lon) {
     return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
 }
 
-function agruparDadosOpenMeteo(hourly) {
+function agruparDadosOpenMeteo(resMeteo) {
+    const hourly = resMeteo.hourly;
+    const daily = resMeteo.daily || {};
     const grupos = {};
     const totalHoras = hourly.time.length;
+
+    // Mapeamento diário para sol (sunrise / sunset)
+    const mapaSolPorData = {};
+    if (daily.time && daily.sunrise && daily.sunset) {
+        for (let d = 0; d < daily.time.length; d++) {
+            const dataIso = daily.time[d];
+            const nascer = daily.sunrise[d] ? daily.sunrise[d].split('T')[1].slice(0, 5) : '--:--';
+            const por = daily.sunset[d] ? daily.sunset[d].split('T')[1].slice(0, 5) : '--:--';
+            mapaSolPorData[dataIso] = { nascer, por };
+        }
+    }
 
     for (let i = 0; i < totalHoras; i++) {
         const isoTime = hourly.time[i];
@@ -175,6 +188,8 @@ function agruparDadosOpenMeteo(hourly) {
         const v120 = hourly.wind_speed_120m ? Math.round(hourly.wind_speed_120m[i] * 10) / 10 : 0;
         const r10 = hourly.wind_gusts_10m ? Math.round(hourly.wind_gusts_10m[i] * 10) / 10 : 0;
 
+        const infoSol = mapaSolPorData[dataStr] || { nascer: '--:--', por: '--:--' };
+
         grupos[dataStr].push({
             dataStr: dataStr,
             horaCompleta: isoTime,
@@ -185,6 +200,8 @@ function agruparDadosOpenMeteo(hourly) {
             chuvaMm: totalChuvaMm,
             nuvens: hourly.cloud_cover[i],
             visibilidade: visibKm,
+            solNascer: infoSol.nascer,
+            solPor: infoSol.por,
             vento10m: v10,
             vento80m: v80,
             vento120m: v120,
@@ -196,8 +213,11 @@ function agruparDadosOpenMeteo(hourly) {
     }
 
     const resultadoDias = Object.keys(grupos).slice(0, 5).map(data => {
+        const infoSol = mapaSolPorData[data] || { nascer: '--:--', por: '--:--' };
         return {
             data: data,
+            solNascer: infoSol.nascer,
+            solPor: infoSol.por,
             horas: grupos[data]
         };
     });
@@ -402,6 +422,10 @@ function renderizarPainelHoraAtual() {
     definirTexto('valorUmidade', `${umidade} %`);
     definirTexto('valorNuvens', `${nuvens} %`);
 
+    const nascerSol = ponto.solNascer || '--:--';
+    const porSol = ponto.solPor || '--:--';
+    definirTexto('valorSol', `${nascerSol} / ${porSol}`);
+
     const visibilidadeKm = ponto.visibilidade || 10;
     const elVisib = document.getElementById('valorVisibilidade');
     if (elVisib) {
@@ -476,24 +500,30 @@ function obterIndiceHoraMaisProxima(horas) {
     return maisProximo;
 }
 
-async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
+let coordenadasAtuais = { lat: -27.5954, lon: -48.6186, nome: 'Kobrasol, São José' };
+
+async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal, forcarAtualizacao = false) {
     try {
-        // Verifica se há dados em cache válidos para carregar na hora sem esperar a internet
-        const cacheRecente = obterDoCache(lat, lon);
-        if (cacheRecente) {
-            indiceKpAtual = cacheRecente.kp;
-            dadosAtuaisTempoReal = cacheRecente.current || null;
-            dadosPrevisaoPorDia = cacheRecente.dias;
-            definirTexto('nomeLocal', 'Local: ' + nomeLocal);
-            atualizarLabelsAbas(dadosPrevisaoPorDia);
-            inicializarMapa(lat, lon);
-            mudarAba(0);
-            return;
+        coordenadasAtuais = { lat, lon, nome: nomeLocal };
+
+        // Se não for atualização forçada, verifica se há dados em cache válidos
+        if (!forcarAtualizacao) {
+            const cacheRecente = obterDoCache(lat, lon);
+            if (cacheRecente) {
+                indiceKpAtual = cacheRecente.kp;
+                dadosAtuaisTempoReal = cacheRecente.current || null;
+                dadosPrevisaoPorDia = cacheRecente.dias;
+                definirTexto('nomeLocal', 'Local: ' + nomeLocal);
+                atualizarLabelsAbas(dadosPrevisaoPorDia);
+                inicializarMapa(lat, lon);
+                mudarAba(0);
+                return;
+            }
         }
 
         definirTexto('textoStatus', '⏳ Atualizando...');
         
-        const urlMeteo = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_direction_10m,wind_direction_120m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+        const urlMeteo = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_direction_10m,wind_direction_120m,wind_gusts_10m&daily=sunrise,sunset&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
 
         const [resMeteo, kp] = await Promise.all([
             fetch(urlMeteo).then(r => r.json()),
@@ -507,7 +537,7 @@ async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
             throw new Error('Não foi possível obter a previsão horária.');
         }
 
-        dadosPrevisaoPorDia = agruparDadosOpenMeteo(resMeteo.hourly);
+        dadosPrevisaoPorDia = agruparDadosOpenMeteo(resMeteo);
         definirTexto('nomeLocal', 'Local: ' + nomeLocal);
 
         // Salva no cache local para navegação ultra rápida
@@ -529,6 +559,19 @@ async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
             statusBox.style.backgroundColor = '#dc3545';
             statusBox.style.color = '#fff';
         }
+    }
+}
+
+async function recarregarPrevisaoForcada() {
+    if (coordenadasAtuais && coordenadasAtuais.lat) {
+        // Limpa cache específico
+        try {
+            const chave = `${CACHE_KEY_PREFIX}${coordenadasAtuais.lat.toFixed(3)}_${coordenadasAtuais.lon.toFixed(3)}`;
+            localStorage.removeItem(chave);
+        } catch (e) {}
+        await carregarPrevisaoOpenMeteo(coordenadasAtuais.lat, coordenadasAtuais.lon, coordenadasAtuais.nome, true);
+    } else {
+        buscarPorGPS();
     }
 }
 
@@ -585,6 +628,7 @@ window.mudarAltitude = mudarAltitude;
 window.mudarAba = mudarAba;
 window.buscarPorCidade = buscarPorCidade;
 window.buscarPorGPS = buscarPorGPS;
+window.recarregarPrevisaoForcada = recarregarPrevisaoForcada;
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')

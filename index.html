@@ -269,6 +269,49 @@
         .valor-dados.atencao { color: #ffc107; }
         .valor-dados.perigo { color: #f75a68; }
 
+        .btn-refresh {
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #29292e;
+            color: #00b37e;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-refresh:active {
+            transform: scale(0.95);
+        }
+
+        /* Botão Consulta DECEA */
+        .btn-decea {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #1a2233;
+            border: 1px solid #2d3b55;
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-decea:hover, .btn-decea:active {
+            background-color: #23304a;
+            color: #93c5fd;
+        }
+
         /* Mapa na parte inferior */
         #mapa {
             height: 140px;
@@ -282,11 +325,12 @@
 <body>
 
     <div class="container">
-        <!-- Topo Unificado: Busca de cidade + Botão GPS juntos -->
+        <!-- Topo Unificado: Busca de cidade + Botão GPS + Recarregar juntos -->
         <div class="topo-barra">
             <input type="text" id="campoCidade" placeholder="Cidade ou bairro..." onkeydown="if(event.key==='Enter') buscarPorCidade()">
             <button type="button" class="btn-busca" onclick="buscarPorCidade()">Buscar</button>
             <button type="button" class="btn-gps-topo" onclick="buscarPorGPS()" title="Usar GPS Atual">📍 GPS</button>
+            <button type="button" class="btn-refresh" onclick="recarregarPrevisaoForcada()" title="Atualizar Agora">🔄</button>
         </div>
 
         <!-- Seletor de Altitude Compacto -->
@@ -362,6 +406,10 @@
                 <span id="valorVisibilidade" class="valor-dados">--</span>
             </div>
             <div class="item-dado">
+                <span>🌅 Sol (Nascer / Pôr)</span>
+                <span id="valorSol" class="valor-dados">-- : -- / -- : --</span>
+            </div>
+            <div class="item-dado">
                 <span>🌡️ Temperatura</span>
                 <span id="valorTemp" class="valor-dados">--</span>
             </div>
@@ -374,6 +422,11 @@
                 <span id="valorNuvens" class="valor-dados">--</span>
             </div>
         </div>
+
+        <!-- Consulta Oficial DECEA / Espaço Aéreo -->
+        <a href="https://geoaisweb.decea.mil.br/" target="_blank" rel="noopener noreferrer" class="btn-decea">
+            ✈️ Consultar Espaço Aéreo (DECEA / GeoAISWEB)
+        </a>
 
         <!-- Mapa Leaflet na parte inferior da rolagem -->
         <div id="mapa"></div>
