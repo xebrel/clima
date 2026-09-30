@@ -7,6 +7,33 @@ let horaSelecionadaIndex = 0;
 let altitudeAtual = 80; // 10, 80 ou 120 metros
 let indiceKpAtual = null;
 
+// Configuração de Cache Inteligente Local (15 minutos)
+const CACHE_KEY_PREFIX = 'droneweather_cache_';
+const CACHE_TTL_MS = 15 * 60 * 1000;
+
+function obterDoCache(lat, lon) {
+    try {
+        const chave = `${CACHE_KEY_PREFIX}${lat.toFixed(3)}_${lon.toFixed(3)}`;
+        const bruto = localStorage.getItem(chave);
+        if (!bruto) return null;
+        const item = JSON.parse(bruto);
+        if (Date.now() - item.timestamp < CACHE_TTL_MS) {
+            return item.dados;
+        }
+    } catch (e) {}
+    return null;
+}
+
+function salvarNoCache(lat, lon, dados) {
+    try {
+        const chave = `${CACHE_KEY_PREFIX}${lat.toFixed(3)}_${lon.toFixed(3)}`;
+        localStorage.setItem(chave, JSON.stringify({
+            timestamp: Date.now(),
+            dados: dados
+        }));
+    } catch (e) {}
+}
+
 // Tabela WMO Weather interpretation codes
 const WMO_CODES = {
     0: { desc: 'Céu limpo', icon: '☀️', chovendo: false },
@@ -32,13 +59,12 @@ const WMO_CODES = {
     99: { desc: 'Tempestade severa', icon: '⛈️', chovendo: true }
 };
 
-// Função helper segura para atualizar texto sem risco de erro nulo
+// Funções helpers seguras para manipular o DOM
 function definirTexto(id, valor) {
     const el = document.getElementById(id);
     if (el) el.innerText = valor;
 }
 
-// Função helper segura para atualizar classe CSS
 function definirClasse(id, classe) {
     const el = document.getElementById(id);
     if (el) el.className = classe;
@@ -87,21 +113,41 @@ async function buscarIndiceKpSolar() {
     return 1.3;
 }
 
+// Geocodificação reversa de alta disponibilidade com fallback
 async function descobrirBairroExato(lat, lon) {
+    // 1ª tentativa: Nominatim com header e timeout rápido
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
         const urlGeo = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
-        const resposta = await fetch(urlGeo, { headers: { 'Accept-Language': 'pt-BR' } });
-        if (!resposta.ok) return null;
-        const resultado = await resposta.json();
-        if (resultado && resultado.address) {
-            const bairro = resultado.address.suburb || resultado.address.neighbourhood || resultado.address.village || resultado.address.commercial;
-            const cidade = resultado.address.city || resultado.address.town || resultado.address.municipality;
-            if (bairro && cidade) return `${bairro}, ${cidade}`;
-            if (bairro) return bairro;
-            if (cidade) return cidade;
+        const resposta = await fetch(urlGeo, { 
+            headers: { 'Accept-Language': 'pt-BR' },
+            signal: controller.signal 
+        });
+        clearTimeout(timeoutId);
+        if (resposta.ok) {
+            const resultado = await resposta.json();
+            if (resultado && resultado.address) {
+                const bairro = resultado.address.suburb || resultado.address.neighbourhood || resultado.address.village || resultado.address.commercial;
+                const cidade = resultado.address.city || resultado.address.town || resultado.address.municipality;
+                if (bairro && cidade) return `${bairro}, ${cidade}`;
+                if (bairro) return bairro;
+                if (cidade) return cidade;
+            }
         }
-    } catch (e) { }
-    return null;
+    } catch (e) {}
+
+    // 2ª tentativa: Open-Meteo Geocoding reverso como fallback
+    try {
+        const urlOM = `https://geocoding-api.open-meteo.com/v1/search?name=&latitude=${lat}&longitude=${lon}&count=1&language=pt&format=json`;
+        const resOM = await fetch(urlOM).then(r => r.json());
+        if (resOM && resOM.results && resOM.results.length > 0) {
+            const r = resOM.results[0];
+            return `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}`;
+        }
+    } catch (e) {}
+
+    return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
 }
 
 function agruparDadosOpenMeteo(hourly) {
@@ -109,7 +155,7 @@ function agruparDadosOpenMeteo(hourly) {
     const totalHoras = hourly.time.length;
 
     for (let i = 0; i < totalHoras; i++) {
-        const isoTime = hourly.time[i]; // formato "YYYY-MM-DDTHH:mm"
+        const isoTime = hourly.time[i];
         const [dataStr, horaStr] = isoTime.split('T');
 
         if (!grupos[dataStr]) {
@@ -432,6 +478,19 @@ function obterIndiceHoraMaisProxima(horas) {
 
 async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
     try {
+        // Verifica se há dados em cache válidos para carregar na hora sem esperar a internet
+        const cacheRecente = obterDoCache(lat, lon);
+        if (cacheRecente) {
+            indiceKpAtual = cacheRecente.kp;
+            dadosAtuaisTempoReal = cacheRecente.current || null;
+            dadosPrevisaoPorDia = cacheRecente.dias;
+            definirTexto('nomeLocal', 'Local: ' + nomeLocal);
+            atualizarLabelsAbas(dadosPrevisaoPorDia);
+            inicializarMapa(lat, lon);
+            mudarAba(0);
+            return;
+        }
+
         definirTexto('textoStatus', '⏳ Atualizando...');
         
         const urlMeteo = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_direction_10m,wind_direction_120m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
@@ -450,6 +509,13 @@ async function carregarPrevisaoOpenMeteo(lat, lon, nomeLocal) {
 
         dadosPrevisaoPorDia = agruparDadosOpenMeteo(resMeteo.hourly);
         definirTexto('nomeLocal', 'Local: ' + nomeLocal);
+
+        // Salva no cache local para navegação ultra rápida
+        salvarNoCache(lat, lon, {
+            kp: kp,
+            current: dadosAtuaisTempoReal,
+            dias: dadosPrevisaoPorDia
+        });
 
         atualizarLabelsAbas(dadosPrevisaoPorDia);
         inicializarMapa(lat, lon);
@@ -499,7 +565,7 @@ function buscarPorGPS() {
             const lat = posicao.coords.latitude;
             const lon = posicao.coords.longitude;
             const bairro = await descobrirBairroExato(lat, lon);
-            const nomeFinal = bairro || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+            const nomeFinal = bairro || `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
             await carregarPrevisaoOpenMeteo(lat, lon, nomeFinal);
         } catch (erro) {
             console.error(erro);
