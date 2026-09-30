@@ -624,11 +624,61 @@ function buscarPorCidadePadrao() {
     carregarPrevisaoOpenMeteo(-27.5954, -48.6186, 'Kobrasol, São José');
 }
 
+function abrirModalPix() {
+    const modal = document.getElementById('modalPix');
+    if (modal) modal.classList.add('ativo');
+}
+
+function fecharModalPix(e) {
+    const modal = document.getElementById('modalPix');
+    if (modal) modal.classList.remove('ativo');
+}
+
+function copiarChavePix() {
+    const chave = 'jlsouza@gmail.com';
+    const btn = document.getElementById('btnCopiarPix');
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(chave).then(() => {
+            if (btn) {
+                btn.innerText = '✅ Chave Pix Copiada!';
+                setTimeout(() => {
+                    btn.innerText = '📋 Copiar Chave Pix';
+                }, 2500);
+            }
+        }).catch(() => fallbackCopiar(chave, btn));
+    } else {
+        fallbackCopiar(chave, btn);
+    }
+}
+
+function fallbackCopiar(texto, btn) {
+    const input = document.createElement('input');
+    input.value = texto;
+    document.body.appendChild(input);
+    input.select();
+    try {
+        document.execCommand('copy');
+        if (btn) {
+            btn.innerText = '✅ Chave Pix Copiada!';
+            setTimeout(() => {
+                btn.innerText = '📋 Copiar Chave Pix';
+            }, 2500);
+        }
+    } catch (err) {
+        alert('Chave Pix: ' + texto);
+    }
+    document.body.removeChild(input);
+}
+
 window.mudarAltitude = mudarAltitude;
 window.mudarAba = mudarAba;
 window.buscarPorCidade = buscarPorCidade;
 window.buscarPorGPS = buscarPorGPS;
 window.recarregarPrevisaoForcada = recarregarPrevisaoForcada;
+window.abrirModalPix = abrirModalPix;
+window.fecharModalPix = fecharModalPix;
+window.copiarChavePix = copiarChavePix;
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
