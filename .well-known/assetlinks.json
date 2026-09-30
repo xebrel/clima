@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.xebrel.twa",
+    "sha256_cert_fingerprints": ["F0:5E:E0:E2:88:56:EB:F0:0D:F0:1A:6F:61:93:31:D5:1D:EB:77:F8:5A:DA:0B:70:D4:7F:25:AF:DC:CC:57:95"]
+  }
+}]
