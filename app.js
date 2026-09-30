@@ -8,7 +8,7 @@ let altitudeAtual = 80; // 10, 80 ou 120 metros
 let indiceKpAtual = null;
 
 // Configuração de Cache Inteligente Local (15 minutos)
-const CACHE_KEY_PREFIX = 'droneweather_cache_';
+const CACHE_KEY_PREFIX = 'droneweather_cache_v3_';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 function obterDoCache(lat, lon) {

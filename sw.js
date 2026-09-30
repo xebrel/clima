@@ -1,5 +1,5 @@
 // Service Worker para DroneWeather Pro
-const CACHE_NAME = 'droneweather-v2';
+const CACHE_NAME = 'droneweather-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
