@@ -3,6 +3,9 @@
   "target": {
     "namespace": "android_app",
     "package_name": "io.github.xebrel.twa",
-    "sha256_cert_fingerprints": ["F0:5E:E0:E2:88:56:EB:F0:0D:F0:1A:6F:61:93:31:D5:1D:EB:77:F8:5A:DA:0B:70:D4:7F:25:AF:DC:CC:57:95"]
+    "sha256_cert_fingerprints": [
+      "7A:9C:ED:63:83:D3:0F:B0:EF:8C:93:00:69:7D:EE:D3:34:F2:5A:DF:3D:6A:2E:BB:19:D2:AD:9E:15:8A:42:A8",
+      "F0:5E:E0:E2:88:56:EB:F0:0D:F0:1A:6F:61:93:31:D5:1D:EB:77:F8:5A:DA:0B:70:D4:7F:25:AF:DC:CC:57:95"
+    ]
   }
 }]
